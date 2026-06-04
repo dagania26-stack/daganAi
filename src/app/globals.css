@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Variables CSS ──────────────────────────────────────────────────────────── */
+:root {
+  --color-terracotta: #C1440E;
+  --color-gold:       #D4A017;
+  --color-forest:     #2D6A4F;
+  --color-warm-white: #FFF8F0;
+  --color-dark:       #1A1A1A;
+  --color-muted:      #6B6860;
+  --color-border:     #E8E0D8;
+  --color-surface:    #F5F0EB;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-warm-white);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    color: var(--color-dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* ─── Utilitaires ────────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Masquer la scrollbar tout en conservant le scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+
+/* Indicateur de frappe — 3 points qui clignotent en séquence */
+@keyframes typing-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.75);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-muted);
+  animation: typing-pulse 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s;    }
+.typing-dot:nth-child(2) { animation-delay: 0.2s;  }
+.typing-dot:nth-child(3) { animation-delay: 0.4s;  }
+
+/* Apparition des messages (translateY 8px → 0, opacity 0 → 1) */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease forwards;
+}
+
+/* ─── Optimisations mobiles ──────────────────────────────────────────────────── */
+
+@layer base {
+  /* Suppression du tap highlight natif (iOS/Android) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Sélection de texte en couleur brand */
+  ::selection {
+    background-color: rgba(193, 68, 14, 0.18);
+    color: inherit;
+  }
+}
+
+/* Prévention du zoom auto iOS sur inputs < 16px — mobile uniquement */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ─── Animations bannière / toast ────────────────────────────────────────────── */
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease forwards;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s ease forwards;
+}
+
+/* ─── Défilement partenaires (droite → gauche, boucle infinie) ───────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

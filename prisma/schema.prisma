@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Documents ───────────────────────────────────────────────────────────────
+
+model Document {
+  id         String   @id @default(cuid())
+  titre      String
+  domaine    String   // "OHADA" | "OTR" | "FINANCEMENT"
+  sousDomaine String?
+  source     String
+  version    String   @default("1.0")
+  actif      Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  chunks Chunk[]
+
+  @@index([domaine])
+  @@index([actif])
+}
+
+// ─── Chunks (fragments vectorisés) ───────────────────────────────────────────
+
+model Chunk {
+  id         String                 @id @default(cuid())
+  contenu    String
+  embedding  Unsupported("vector(1536)")
+  position   Int
+  tokenCount Int                    @default(0)
+  documentId String
+  createdAt  DateTime               @default(now())
+
+  document Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  messages MessageChunk[]
+
+  @@index([documentId])
+}
+
+// ─── Conversations ────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(uuid())
+  langue    String   @default("fr")
+  domaine   String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([createdAt])
+}
+
+// ─── Messages ─────────────────────────────────────────────────────────────────
+
+model Message {
+  id             String   @id @default(cuid())
+  question       String
+  reponse        String
+  scoreRAG       Float?
+  latenceMs      Int?
+  conversationId String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  chunks       MessageChunk[]
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ─── Table de jonction Message ↔ Chunk ───────────────────────────────────────
+
+model MessageChunk {
+  messageId  String
+  chunkId    String
+  scoreCosin Float
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  chunk   Chunk   @relation(fields: [chunkId],   references: [id], onDelete: Cascade)
+
+  @@id([messageId, chunkId])
+}
