@@ -4,6 +4,9 @@ import { queryRAG } from "@/lib/rag-client";
 import { generateResponse, buildContext } from "@/lib/llm";
 import type { ChatRequest, ChatResponse, RAGSource } from "@/types";
 
+// Vercel Pro requis pour maxDuration > 10s — nécessaire pour RAG + LLM en chaîne
+export const maxDuration = 60;
+
 const MAX_QUESTION_LENGTH = 500;
 
 // Bloque les tentatives d'injection de scripts/HTML dans la question

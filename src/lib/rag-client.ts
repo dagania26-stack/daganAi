@@ -1,6 +1,7 @@
 import type { RAGServiceResponse, RAGSource } from "@/types";
 
-const RAG_TIMEOUT_MS = 30_000;
+// Configurable via RAG_TIMEOUT_MS — défaut 8s pour rester dans les limites Vercel
+const RAG_TIMEOUT_MS = parseInt(process.env.RAG_TIMEOUT_MS ?? "8000", 10);
 
 // Forme brute retournée par le service Python (snake_case)
 type PythonChunkSource = {
