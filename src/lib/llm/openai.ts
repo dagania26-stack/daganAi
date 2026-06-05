@@ -1,13 +1,16 @@
 import OpenAI from "openai";
 import { SYSTEM_PROMPT } from "./prompt";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Instanciation lazy — évite l'erreur au build Next.js si la clé est absente
+function getClient() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function generateWithOpenAI(
   question: string,
   context: string
 ): Promise<string> {
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: "gpt-4o-mini",
     max_tokens: 800,
     messages: [

@@ -1,14 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT } from "./prompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const MODEL  = process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6";
+// Instanciation lazy — évite l'erreur au build Next.js si la clé est absente
+function getClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 export async function generateWithClaude(
   question: string,
   context: string
 ): Promise<string> {
-  const message = await client.messages.create({
+  const MODEL = process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6";
+  const message = await getClient().messages.create({
     model: MODEL,
     max_tokens: 800,
     system: SYSTEM_PROMPT,
