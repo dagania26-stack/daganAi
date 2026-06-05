@@ -65,7 +65,7 @@ export default function ContactPage() {
             <i className="fi fi-rr-envelope text-sm" aria-hidden="true" />
             Nous contacter
           </div>
-          <h1 className="font-display font-bold text-3xl md:text-4xl text-dark mb-2">
+          <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-dark mb-2">
             Une question ? Un partenariat ?
           </h1>
           <p className="font-sans text-muted text-base max-w-lg">

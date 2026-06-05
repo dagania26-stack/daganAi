@@ -69,7 +69,7 @@ export default function InputBar({ onSend, isLoading, onStop, prefill }: InputBa
       className="sticky bottom-0 z-40 w-full bg-warm-white border-t border-border-custom shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
     >
-      <div className="mx-auto max-w-2xl px-4 pt-3 pb-0">
+      <div className="mx-auto max-w-2xl px-3 sm:px-4 pt-3 pb-0">
 
         {/* Compteur de caractères */}
         {charCount > 0 && (

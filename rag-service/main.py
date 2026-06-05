@@ -31,12 +31,16 @@ app = FastAPI(
 )
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
+_ALLOWED_ORIGINS = [o.strip() for o in (
+    "http://localhost:3000,"
+    "https://dagan-ia.tg,"
+    "https://dagan-ia.vercel.app,"
+    + (__import__("os").getenv("ALLOWED_ORIGINS", ""))
+).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",   # Next.js dev
-        "https://dagan-ia.vercel.app",
-    ],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],

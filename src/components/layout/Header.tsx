@@ -28,7 +28,7 @@ export default function Header() {
 
         {/* Logo + tagline */}
         <div className="flex flex-col leading-none text-center">
-          <span className="font-display font-extrabold text-xl text-white tracking-tight">
+          <span className="font-display font-extrabold text-base sm:text-xl text-white tracking-tight">
             Dagan IA
           </span>
           <span className="hidden sm:block text-xs text-white/70 italic font-sans mt-0.5">

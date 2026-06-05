@@ -25,7 +25,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
           <Image src="/logo.png" alt="Dagan IA" width={48} height={48} className="rounded-xl" />
           <div className="flex flex-col leading-none">
-            <span className="font-display font-extrabold text-lg text-terracotta leading-none">
+            <span className="font-display font-extrabold text-base sm:text-lg text-terracotta leading-none">
               Dagan IA
             </span>
             <span className="hidden sm:block text-[10px] text-muted font-sans mt-0.5">

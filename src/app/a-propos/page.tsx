@@ -68,7 +68,7 @@ export default function AProposPage() {
             <i className="fi fi-rr-info text-sm" aria-hidden="true" />
             À propos
           </div>
-          <h1 className="font-display font-bold text-3xl md:text-4xl text-dark mb-2">
+          <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-dark mb-2">
             Notre histoire
           </h1>
           <p className="font-sans text-muted text-base max-w-xl">
@@ -88,7 +88,7 @@ export default function AProposPage() {
               <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-4">
                 Notre mission
               </p>
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark mb-5 leading-snug">
+              <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark mb-5 leading-snug">
                 Être la Grande Sœur Numérique de chaque femme qui entreprend
               </h2>
               <p className="font-sans text-muted text-base leading-relaxed mb-5">
@@ -124,7 +124,7 @@ export default function AProposPage() {
           <p className="font-display text-xs font-bold uppercase tracking-wider text-white/60 mb-4">
             Notre vision
           </p>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-white mb-6 max-w-3xl mx-auto leading-snug">
+          <h2 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white mb-6 max-w-3xl mx-auto leading-snug">
             Un Togo et un Bénin où chaque femme peut créer et développer
             son entreprise en toute connaissance de ses droits.
           </h2>
@@ -143,7 +143,7 @@ export default function AProposPage() {
             <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-3">
               Ce que nous faisons concrètement
             </p>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark">
+            <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark">
               Nos objectifs
             </h2>
           </div>
@@ -174,7 +174,7 @@ export default function AProposPage() {
             <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-3">
               Ce qui nous guide
             </p>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark">
+            <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark">
               Nos valeurs
             </h2>
           </div>

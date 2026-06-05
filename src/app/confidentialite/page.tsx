@@ -82,7 +82,7 @@ export default function ConfidentialitePage() {
             <i className="fi fi-rr-shield-check text-sm" aria-hidden="true" />
             Vie privée
           </div>
-          <h1 className="font-display font-bold text-3xl md:text-4xl text-dark mb-2">
+          <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-dark mb-2">
             Politique de confidentialité
           </h1>
           <p className="font-sans text-muted text-sm">

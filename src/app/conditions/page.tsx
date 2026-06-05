@@ -88,7 +88,7 @@ export default function ConditionsPage() {
             <i className="fi fi-rr-document-signed text-sm" aria-hidden="true" />
             Légal
           </div>
-          <h1 className="font-display font-bold text-3xl md:text-4xl text-dark mb-2">
+          <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-dark mb-2">
             Conditions d&apos;utilisation
           </h1>
           <p className="font-sans text-muted text-sm">

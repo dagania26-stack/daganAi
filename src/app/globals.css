@@ -27,7 +27,7 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    font-size: 120%;
+    font-size: 106%;          /* mobile : +6 % */
   }
 
   body {
@@ -37,6 +37,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;       /* bloque le scroll horizontal parasite */
+  }
+
+  /* Empêche les longs mots de déborder les bulles et colonnes */
+  * {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    min-width: 0;
   }
 }
 
@@ -111,6 +119,10 @@
     color: inherit;
   }
 }
+
+/* +12 % sur tablette, +20 % sur desktop */
+@media (min-width: 640px)  { html { font-size: 112%; } }
+@media (min-width: 1024px) { html { font-size: 120%; } }
 
 /* Prévention du zoom auto iOS sur inputs < 16px — mobile uniquement */
 @media screen and (max-width: 768px) {

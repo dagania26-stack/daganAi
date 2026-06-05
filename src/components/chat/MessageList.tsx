@@ -81,7 +81,7 @@ export default function MessageList({ messages, isLoading, onEditMessage }: Mess
     <div
       className={cn(
         "flex-1 overflow-y-auto scrollbar-hide",
-        "px-4 py-4",
+        "px-3 sm:px-4 py-4",
         // iOS momentum scroll
         "[overflow-y:auto] [-webkit-overflow-scrolling:touch]",
       )}

@@ -97,7 +97,7 @@ export default function MessageBubble({ message, onEdit }: MessageBubbleProps) {
       <div
         className={cn(
           "flex flex-col gap-1",
-          "max-w-[85%] md:max-w-[75%]",
+          "max-w-[82%] sm:max-w-[78%] md:max-w-[72%]",
           isUser ? "items-end" : "items-start",
         )}
       >

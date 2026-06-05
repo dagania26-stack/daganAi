@@ -78,32 +78,32 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-black/72 pointer-events-none" />
 
         {/* Contenu */}
-        <div className="relative z-10 mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-20 text-center">
+        <div className="relative z-10 w-full mx-auto max-w-3xl px-4 sm:px-8 py-12 sm:py-16 lg:py-20 text-center">
 
-          <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl xl:text-7xl text-white leading-tight mb-5 sm:mb-6">
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl xl:text-6xl text-white leading-tight mb-4 sm:mb-6">
             Votre{" "}
             <span className="text-[#f4a07a]">Grande Sœur</span>
             <br />
             Numérique
           </h1>
 
-          <p className="font-sans text-white text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto">
+          <p className="font-sans text-white text-sm sm:text-base md:text-lg leading-relaxed mb-7 sm:mb-10 max-w-xl mx-auto">
             Créez et développez votre entreprise en toute confiance.
             Des réponses claires, vérifiées et adaptées aux femmes
             entrepreneures du Togo et du Bénin.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 lg:gap-[40px] justify-center w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center w-full">
             <Link
               href="/chat"
-              className="inline-flex items-center justify-center gap-2 bg-terracotta text-white font-display font-semibold px-8 py-4 rounded-xl min-h-[52px] hover:bg-[#a33a0c] active:scale-95 transition-all duration-150 text-base sm:text-lg shadow-lg w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 bg-terracotta text-white font-display font-semibold px-6 py-3.5 rounded-xl min-h-[48px] hover:bg-[#a33a0c] active:scale-95 transition-all duration-150 text-sm sm:text-base shadow-lg w-full sm:w-auto"
             >
               <i className="fi fi-rr-comment-alt" aria-hidden="true" />
               Commencer gratuitement
             </Link>
             <a
               href="#comment-ca-marche"
-              className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm border border-white/40 text-white font-display font-semibold px-8 py-4 rounded-xl min-h-[52px] hover:bg-white/25 transition-colors text-base sm:text-lg w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm border border-white/40 text-white font-display font-semibold px-6 py-3.5 rounded-xl min-h-[48px] hover:bg-white/25 transition-colors text-sm sm:text-base w-full sm:w-auto"
             >
               <i className="fi fi-rr-info" aria-hidden="true" />
               En savoir plus
@@ -118,11 +118,11 @@ export default function LandingPage() {
       {/* ── Domaines ─────────────────────────────────────────────────────────── */}
       <section className="bg-surface py-14 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-3">
               Nos domaines d&apos;expertise
             </p>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark">
+            <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark">
               Tout ce dont vous avez besoin
             </h2>
           </div>
@@ -156,11 +156,11 @@ export default function LandingPage() {
       {/* ── Comment ça marche ─────────────────────────────────────────────────── */}
       <section id="comment-ca-marche" className="py-14 sm:py-16 lg:py-20 bg-warm-white">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-3">
               Simple et rapide
             </p>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark">
+            <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark">
               Comment ça marche ?
             </h2>
           </div>
@@ -200,7 +200,7 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 flex flex-col md:flex-row items-center gap-8 md:gap-10 lg:gap-14">
           <div className="flex-1 text-center md:text-left">
             <i className="fi fi-rr-quote-right text-white/30 text-4xl sm:text-5xl mb-4 block" aria-hidden="true" />
-            <p className="font-display text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium leading-relaxed mb-6">
+            <p className="font-display text-white text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-relaxed mb-6">
               &ldquo;Dagan IA m&apos;a aidée à comprendre les démarches pour créer
               ma SARL en moins de 10 minutes. C&apos;est comme avoir une avocate dans ma poche.&rdquo;
             </p>
@@ -240,7 +240,7 @@ export default function LandingPage() {
           <p className="font-display text-xs font-bold uppercase tracking-wider text-terracotta mb-3">
             Ils nous font confiance
           </p>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark">
+          <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark">
             Nos partenaires
           </h2>
         </div>
@@ -264,7 +264,7 @@ export default function LandingPage() {
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
       <section className="py-14 sm:py-16 lg:py-20 bg-surface">
         <div className="mx-auto max-w-xl px-4 sm:px-6 text-center">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-dark mb-3 sm:mb-4">
+          <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-dark mb-3 sm:mb-4">
             Prête à développer votre entreprise ?
           </h2>
           <p className="font-sans text-muted text-sm sm:text-base leading-relaxed mb-7 sm:mb-8">

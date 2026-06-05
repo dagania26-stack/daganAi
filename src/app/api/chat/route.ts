@@ -66,37 +66,44 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const latenceMs = Date.now() - start + ragLatence;
 
-    // ── Persistance ───────────────────────────────────────────────────────────
-    let convId = conversationId;
-    if (!convId) {
-      const conv = await prisma.conversation.create({
+    // ── Persistance (optionnelle — ne bloque pas la réponse si DB absente) ────
+    let convId   = conversationId ?? "local-" + Date.now();
+    let messageId = "local-" + Date.now();
+
+    try {
+      if (!conversationId) {
+        const conv = await prisma.conversation.create({
+          data: {
+            langue:    "fr",
+            userAgent: req.headers.get("user-agent") ?? undefined,
+          },
+        });
+        convId = conv.id;
+      }
+
+      const scoreRAG = sources.length > 0
+        ? sources.reduce((s, src) => s + src.score, 0) / sources.length
+        : null;
+
+      const message = await prisma.message.create({
         data: {
-          langue:    "fr",
-          userAgent: req.headers.get("user-agent") ?? undefined,
+          question:       question.trim(),
+          reponse,
+          scoreRAG,
+          latenceMs,
+          conversationId: convId,
         },
       });
-      convId = conv.id;
+      messageId = message.id;
+    } catch (dbErr) {
+      console.warn("[/api/chat] Persistance DB ignorée :", dbErr instanceof Error ? dbErr.message : dbErr);
     }
-
-    const scoreRAG = sources.length > 0
-      ? sources.reduce((s, src) => s + src.score, 0) / sources.length
-      : null;
-
-    const message = await prisma.message.create({
-      data: {
-        question:       question.trim(),
-        reponse,
-        scoreRAG,
-        latenceMs,
-        conversationId: convId,
-      },
-    });
 
     const payload: ChatResponse = {
       reponse,
       sources,
       conversationId: convId,
-      messageId:      message.id,
+      messageId,
       latenceMs,
     };
 
