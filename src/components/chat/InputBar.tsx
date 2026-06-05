@@ -1,24 +1,26 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface InputBarProps {
-  onSend:    (question: string) => void;
-  isLoading: boolean;
+  onSend:        (question: string) => void;
+  isLoading:     boolean;
+  onStop?:       () => void;
+  prefill?:      { value: string; seq: number };
 }
 
 const MAX_CHARS  = 500;
 const WARN_AT    = 450;
 
-export default function InputBar({ onSend, isLoading }: InputBarProps) {
+export default function InputBar({ onSend, isLoading, onStop, prefill }: InputBarProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const charCount  = value.length;
-  const isEmpty    = value.trim().length === 0;
-  const isDisabled = isLoading || isEmpty || charCount > MAX_CHARS;
-  const isNearLimit = charCount > WARN_AT;
+  const charCount    = value.length;
+  const isEmpty      = value.trim().length === 0;
+  const isDisabled   = isLoading || isEmpty || charCount > MAX_CHARS;
+  const isNearLimit  = charCount > WARN_AT;
 
   // Auto-resize textarea jusqu'à 4 lignes (≈ 120px)
   const adjustHeight = useCallback(() => {
@@ -49,6 +51,18 @@ export default function InputBar({ onSend, isLoading }: InputBarProps) {
       handleSend();
     }
   };
+
+  // Pré-remplissage depuis le bouton "Modifier" d'un message
+  useEffect(() => {
+    if (!prefill?.value) return;
+    setValue(prefill.value);
+    requestAnimationFrame(() => {
+      adjustHeight();
+      textareaRef.current?.focus();
+    });
+  // seq change → force re-run même si le texte est identique
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill?.seq]);
 
   return (
     <div
@@ -95,34 +109,52 @@ export default function InputBar({ onSend, isLoading }: InputBarProps) {
             aria-label="Saisir une question"
           />
 
-          {/* Bouton envoyer */}
-          <button
-            onClick={handleSend}
-            disabled={isDisabled}
-            aria-label="Envoyer la question"
-            className={cn(
-              "shrink-0 w-11 h-11 rounded-full",
-              "flex items-center justify-center",
-              "bg-terracotta text-white",
-              "transition-all duration-150 active:scale-90",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2",
-            )}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+          {/* Bouton Stop (pendant le chargement) ou Envoyer */}
+          {isLoading && onStop ? (
+            <button
+              onClick={onStop}
+              aria-label="Arrêter la réponse"
+              title="Arrêter"
+              className={cn(
+                "shrink-0 w-11 h-11 rounded-full",
+                "flex items-center justify-center",
+                "bg-dark/10 text-dark border border-dark/20",
+                "hover:bg-dark/20 active:scale-90",
+                "transition-all duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark focus-visible:ring-offset-2",
+              )}
             >
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </button>
+              <i className="fi fi-rr-stop-circle text-base leading-none" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={isDisabled}
+              aria-label="Envoyer la question"
+              className={cn(
+                "shrink-0 w-11 h-11 rounded-full",
+                "flex items-center justify-center",
+                "bg-terracotta text-white",
+                "transition-all duration-150 active:scale-90",
+                "disabled:opacity-40 disabled:cursor-not-allowed",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2",
+              )}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          )}
         </div>
 
       </div>

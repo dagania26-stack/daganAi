@@ -46,7 +46,7 @@ export async function queryRAG(
         question,
         conversation_id: conversationId ?? null,
         domaine:         domaine ?? null,
-        top_k:           5,
+        top_k:           3,
       }),
       signal: controller.signal,
     });

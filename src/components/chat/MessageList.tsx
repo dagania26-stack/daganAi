@@ -9,8 +9,9 @@ import TypingIndicator from "./TypingIndicator";
 import DomainBadge from "@/components/layout/DomainBadge";
 
 interface MessageListProps {
-  messages:  ChatMessage[];
-  isLoading: boolean;
+  messages:        ChatMessage[];
+  isLoading:       boolean;
+  onEditMessage?:  (content: string) => void;
 }
 
 // Messages avec contenu vide et en streaming → remplacés par TypingIndicator
@@ -24,8 +25,9 @@ function WelcomeMessage() {
   return (
     <div className="flex justify-start items-end gap-2 animate-fade-in-up">
       {/* Avatar */}
-      <div className="shrink-0 w-8 h-8 rounded-full bg-terracotta/10 flex items-center justify-center self-start mt-1">
-        <span className="font-display font-bold text-sm text-terracotta">D</span>
+      <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden self-start mt-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/icon-192x192.svg" alt="Dagan IA" width={32} height={32} className="w-full h-full object-cover" />
       </div>
 
       {/* Bulle de bienvenue */}
@@ -69,7 +71,7 @@ function WelcomeMessage() {
   );
 }
 
-export default function MessageList({ messages, isLoading }: MessageListProps) {
+export default function MessageList({ messages, isLoading, onEditMessage }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const { visible, isTyping } = useDisplayMessages(messages);
 
@@ -91,7 +93,11 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
 
         {/* Liste des messages */}
         {visible.map(message => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble
+            key={message.id}
+            message={message}
+            onEdit={message.role === "user" ? onEditMessage : undefined}
+          />
         ))}
 
         {/* Indicateur de frappe pendant le chargement */}

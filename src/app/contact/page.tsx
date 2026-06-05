@@ -90,7 +90,7 @@ export default function ContactPage() {
                   Message envoyé !
                 </h2>
                 <p className="text-muted font-sans text-sm">
-                  Merci {form.nom.split(" ")[0]}. Nous reviendrons vers toi sous 48 heures.
+                  Merci {form.nom.split(" ")[0]}. Nous reviendrons vers vous sous 48 heures.
                 </p>
               </div>
               <button

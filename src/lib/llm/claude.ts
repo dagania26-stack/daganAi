@@ -10,7 +10,7 @@ export async function generateWithClaude(
 ): Promise<string> {
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 1024,
+    max_tokens: 800,
     system: SYSTEM_PROMPT,
     messages: [
       {

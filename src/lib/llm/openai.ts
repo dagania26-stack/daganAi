@@ -9,7 +9,7 @@ export async function generateWithOpenAI(
 ): Promise<string> {
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
-    max_tokens: 1024,
+    max_tokens: 800,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       {

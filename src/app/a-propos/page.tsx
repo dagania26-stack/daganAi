@@ -99,7 +99,7 @@ export default function AProposPage() {
               </p>
               <p className="font-sans text-muted text-base leading-relaxed">
                 Le nom <strong className="text-dark">Dagan</strong> s&apos;inspire de la tradition
-                de la femme forte et protectrice en Afrique de l&apos;Ouest — celle qui
+                de la femme forte et protectrice en Afrique de l&apos;Ouest celle qui
                 guide, soutient et ouvre les portes.
               </p>
             </div>

@@ -284,7 +284,7 @@ export default function LandingPage() {
       <footer className="bg-dark text-white/60 py-8 sm:py-10">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Dagan IA" width={26} height={26} className="rounded-md opacity-80" />
+            <Image src="/icons/icon-192x192.svg" alt="Dagan IA" width={26} height={26} className="rounded-md opacity-80" />
             <span className="font-display font-bold text-white text-base sm:text-lg">Dagan IA</span>
           </div>
 

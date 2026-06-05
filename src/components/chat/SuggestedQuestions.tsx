@@ -10,9 +10,6 @@ interface SuggestedQuestionsProps {
 const QUESTIONS = [
   "Comment créer une SARL au Togo ? Quel est le capital minimum ?",
   "Quand dois-je déclarer la TVA ? Comment calculer mon acompte ?",
-  "C'est quoi les étapes pour s'enregistrer au CFE ?",
-  "Quelle est la différence entre SARL et SA dans le droit OHADA ?",
-  "Comment calculer ma patente en tant que petit commerce ?",
 ] as const;
 
 export default function SuggestedQuestions({ onSelect, visible }: SuggestedQuestionsProps) {

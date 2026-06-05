@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { ChatMessage } from "@/types";
 import { generateId } from "@/lib/utils";
 
-const SESSION_KEY = "dagan_conversation_id";
-const MAX_CHARS   = 500;
-const TIMEOUT_MS  = 30_000;
+const SESSION_KEY   = "dagan_conversation_id";
+const MAX_CHARS     = 500;
+const TIMEOUT_MS    = 30_000;
+// Streaming simulé : 25 caractères toutes les 25 ms → ~1 000 chars/s
+const STREAM_CHUNK  = 25;
+const STREAM_TICK   = 25;
 
 export interface UseChatReturn {
   messages:       ChatMessage[];
@@ -15,6 +18,7 @@ export interface UseChatReturn {
   error:          string | null;
   toast:          string | null;
   sendMessage:    (question: string) => Promise<void>;
+  stopMessage:    () => void;
   clearMessages:  () => void;
   clearToast:     () => void;
 }
@@ -40,6 +44,10 @@ export function useChat(): UseChatReturn {
   const [error,          setError]          = useState<string | null>(null);
   const [toast,          setToast]          = useState<string | null>(null);
 
+  const abortRef       = useRef<AbortController | null>(null);
+  const userAbortedRef = useRef(false);
+  const streamTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) setConversationId(saved);
@@ -49,7 +57,7 @@ export function useChat(): UseChatReturn {
     const trimmed = question.trim();
     if (!trimmed || trimmed.length > MAX_CHARS || isLoading) return;
 
-    // Détection de question doublon
+    // Détection doublon
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
     if (lastUserMsg?.content === trimmed) {
       setToast("Tu as déjà posé cette question.");
@@ -71,7 +79,9 @@ export function useChat(): UseChatReturn {
     setError(null);
 
     const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    abortRef.current     = controller;
+    userAbortedRef.current = false;
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
       const res = await fetch("/api/chat", {
@@ -90,38 +100,70 @@ export function useChat(): UseChatReturn {
 
       if (!res.ok) throw Object.assign(new Error(data.error ?? ""), { status: res.status });
 
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantMsgId
-            ? { ...m, content: data.reponse ?? "", sources: data.sources ?? [], isStreaming: false }
-            : m,
-        ),
-      );
+      // Déverrouille l'input dès réception
+      clearTimeout(timeoutId);
+      abortRef.current = null;
+      setIsLoading(false);
 
       if (data.conversationId) {
         setConversationId(data.conversationId);
         sessionStorage.setItem(SESSION_KEY, data.conversationId);
       }
+
+      // Streaming simulé : affiche le texte progressivement
+      const fullContent = data.reponse ?? "";
+      const sources     = data.sources ?? [];
+      let pos = 0;
+
+      const tick = () => {
+        pos = Math.min(pos + STREAM_CHUNK, fullContent.length);
+        const done = pos >= fullContent.length;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMsgId
+              ? { ...m, content: fullContent.slice(0, pos), isStreaming: !done, sources: done ? sources : undefined }
+              : m,
+          ),
+        );
+        if (!done) {
+          streamTimerRef.current = setTimeout(tick, STREAM_TICK);
+        }
+      };
+      tick();
+
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      const msg    = classifyError(err, status);
-
-      setMessages((prev) => {
-        const filtered = prev.filter((m) => m.id !== assistantMsgId);
-        const errMsg: ChatMessage = {
-          id: generateId(), role: "assistant",
-          content:   `Désolée, je n'ai pas pu traiter ta question. ${msg}`,
-          createdAt: new Date(),
-        };
-        return [...filtered, errMsg];
-      });
-
-      setError(msg);
-    } finally {
       clearTimeout(timeoutId);
+      abortRef.current = null;
       setIsLoading(false);
+
+      if (err instanceof Error && err.name === "AbortError" && userAbortedRef.current) {
+        // Arrêt manuel → retire le placeholder, pas d'erreur
+        setMessages((prev) => prev.filter((m) => m.id !== assistantMsgId));
+      } else {
+        const status = (err as { status?: number }).status;
+        const msg    = classifyError(err, status);
+        setMessages((prev) => {
+          const filtered = prev.filter((m) => m.id !== assistantMsgId);
+          const errMsg: ChatMessage = {
+            id: generateId(), role: "assistant",
+            content:   `Désolée, je n'ai pas pu traiter ta question. ${msg}`,
+            createdAt: new Date(),
+          };
+          return [...filtered, errMsg];
+        });
+        setError(msg);
+      }
     }
   }, [conversationId, isLoading, messages]);
+
+  const stopMessage = useCallback(() => {
+    userAbortedRef.current = true;
+    abortRef.current?.abort();
+    if (streamTimerRef.current) {
+      clearTimeout(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -134,5 +176,5 @@ export function useChat(): UseChatReturn {
 
   const clearToast = useCallback(() => setToast(null), []);
 
-  return { messages, isLoading, conversationId, error, toast, sendMessage, clearMessages, clearToast };
+  return { messages, isLoading, conversationId, error, toast, sendMessage, stopMessage, clearMessages, clearToast };
 }
