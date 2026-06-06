@@ -35,7 +35,9 @@ const PROD_ONLY_HEADERS = [
 
 const nextConfig = {
   poweredByHeader: false,
-  serverExternalPackages: ["@react-pdf/renderer"],
+  experimental: {
+    serverComponentsExternalPackages: ["@react-pdf/renderer"],
+  },
 
   async headers() {
     const headers = isDev ? COMMON_HEADERS : [...COMMON_HEADERS, ...PROD_ONLY_HEADERS];

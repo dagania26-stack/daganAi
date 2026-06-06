@@ -1,5 +1,9 @@
-import { auth } from "@/auth"
+import NextAuth from "next-auth"
+import { authConfig } from "@/auth.config"
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+const { auth } = NextAuth(authConfig)
 
 // Rate limiter pour /api/chat — best-effort (Map locale à l'isolate Edge)
 const store = new Map<string, { count: number; resetAt: number }>()

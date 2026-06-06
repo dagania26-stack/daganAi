@@ -1,6 +1,9 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialisation lazy pour éviter l'erreur au build si RESEND_API_KEY est absent
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export async function sendRapportEmail(opts: {
   to:           string
@@ -89,7 +92,7 @@ export async function sendRapportEmail(opts: {
 </body>
 </html>`
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from:    "Dagan IA <rapports@daganai.com>",
     to,
     subject: `Rapport financier — ${businessNom} (${periode})`,
@@ -99,7 +102,7 @@ export async function sendRapportEmail(opts: {
 }
 
 export async function sendMagicLinkEmail(to: string, url: string) {
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: "Dagan IA <connexion@daganai.com>",
     to,
     subject: "Votre lien de connexion — Dagan IA",

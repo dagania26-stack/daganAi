@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import { fmt, fmtDate } from "@/lib/gestion"
+import { fmt, fmtDate } from "@/lib/format"
 
 const DashboardCharts = dynamic(() => import("./DashboardCharts"), {
   ssr:     false,
