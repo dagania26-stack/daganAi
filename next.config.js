@@ -34,8 +34,8 @@ const PROD_ONLY_HEADERS = [
 ];
 
 const nextConfig = {
-  // Supprime le header X-Powered-By (ne pas divulguer la stack)
   poweredByHeader: false,
+  serverExternalPackages: ["@react-pdf/renderer"],
 
   async headers() {
     const headers = isDev ? COMMON_HEADERS : [...COMMON_HEADERS, ...PROD_ONLY_HEADERS];

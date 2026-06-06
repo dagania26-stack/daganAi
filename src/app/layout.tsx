@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans } from "next/font/google";
 import { SwRegister } from "@/components/SwRegister";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 import "./globals.css";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────────── */
@@ -112,7 +113,9 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-warm-white font-sans antialiased">
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
         <WhatsAppButton />
         <SwRegister />
       </body>

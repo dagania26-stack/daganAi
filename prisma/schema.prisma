@@ -8,18 +8,75 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─── Documents ───────────────────────────────────────────────────────────────
+// ─── Auth (NextAuth / Auth.js v5) ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  businesses Business[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Documents ────────────────────────────────────────────────────────────────
 
 model Document {
-  id         String   @id @default(cuid())
-  titre      String
-  domaine    String   // "OHADA" | "OTR" | "FINANCEMENT"
+  id          String   @id @default(cuid())
+  titre       String
+  domaine     String
   sousDomaine String?
-  source     String
-  version    String   @default("1.0")
-  actif      Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  source      String
+  version     String   @default("1.0")
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   chunks Chunk[]
 
@@ -30,13 +87,13 @@ model Document {
 // ─── Chunks (fragments vectorisés) ───────────────────────────────────────────
 
 model Chunk {
-  id         String                 @id @default(cuid())
+  id         String                     @id @default(cuid())
   contenu    String
   embedding  Unsupported("vector(1536)")
   position   Int
-  tokenCount Int                    @default(0)
+  tokenCount Int                        @default(0)
   documentId String
-  createdAt  DateTime               @default(now())
+  createdAt  DateTime                   @default(now())
 
   document Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
   messages MessageChunk[]
@@ -88,4 +145,128 @@ model MessageChunk {
   chunk   Chunk   @relation(fields: [chunkId],   references: [id], onDelete: Cascade)
 
   @@id([messageId, chunkId])
+}
+
+// ─── Dagan Gestion — Module financier ────────────────────────────────────────
+
+model Business {
+  id                 String    @id @default(cuid())
+  nom                String
+  secteur            String?
+  pays               String    @default("TG")
+  devise             String    @default("FCFA")
+  userId             String?
+  rapportFrequence   String?   // "HEBDO" | "MENSUEL" | null
+  rapportDernierEnvoi DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user         User?             @relation(fields: [userId], references: [id])
+  categories   Category[]
+  products     Product[]
+  transactions Transaction[]
+  charges      Charge[]
+  debts        Debt[]
+  reports      FinancialReport[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Category {
+  id         String @id @default(cuid())
+  nom        String
+  type       String // "VENTE" | "ACHAT" | "CHARGE"
+  businessId String
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products     Product[]
+  transactions Transaction[]
+
+  @@index([businessId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  nom         String
+  prixVente   Float
+  coutRevient Float    @default(0)
+  unite       String   @default("unité")
+  actif       Boolean  @default(true)
+  categoryId  String?
+  businessId  String
+  createdAt   DateTime @default(now())
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category     Category?     @relation(fields: [categoryId], references: [id])
+  transactions Transaction[]
+
+  @@index([businessId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        String   // "ENTREE" | "SORTIE"
+  montant     Float
+  description String?
+  quantite    Float    @default(1)
+  date        DateTime @default(now())
+  businessId  String
+  categoryId  String?
+  productId   String?
+  createdAt   DateTime @default(now())
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+  product  Product?  @relation(fields: [productId],  references: [id])
+
+  @@index([businessId, date])
+  @@index([businessId, type])
+}
+
+model Charge {
+  id         String   @id @default(cuid())
+  nom        String
+  montant    Float
+  type       String   // "FIXE" | "VARIABLE"
+  frequence  String   @default("MENSUEL") // "MENSUEL" | "HEBDO" | "ANNUEL"
+  actif      Boolean  @default(true)
+  businessId String
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model Debt {
+  id             String    @id @default(cuid())
+  description    String
+  montant        Float
+  montantRestant Float
+  creancier      String
+  dateEcheance   DateTime?
+  statut         String    @default("EN_COURS") // "EN_COURS" | "REMBOURSE" | "EN_RETARD"
+  businessId     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model FinancialReport {
+  id          String   @id @default(cuid())
+  periode     String   // "HEBDO" | "MENSUEL"
+  dateDebut   DateTime
+  dateFin     DateTime
+  contenu     String   @db.Text
+  kpiSnapshot Json
+  businessId  String
+  createdAt   DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
 }

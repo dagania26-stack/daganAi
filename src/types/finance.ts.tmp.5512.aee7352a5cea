@@ -1,0 +1,83 @@
+export type TransactionType = "ENTREE" | "SORTIE";
+export type ChargeType = "FIXE" | "VARIABLE";
+export type ChargeFrequence = "MENSUEL" | "HEBDO" | "ANNUEL";
+export type ReportPeriode = "HEBDO" | "MENSUEL";
+export type FinancePeriode = "semaine" | "mois";
+
+export interface Business {
+  id: string;
+  nom: string;
+  secteur: string | null;
+  pays: string;
+  devise: string;
+  createdAt: string;
+}
+
+export interface Category {
+  id: string;
+  nom: string;
+  type: "VENTE" | "ACHAT" | "CHARGE";
+  businessId: string;
+}
+
+export interface Product {
+  id: string;
+  nom: string;
+  prixVente: number;
+  coutRevient: number;
+  unite: string;
+  actif: boolean;
+  categoryId: string | null;
+  businessId: string;
+  createdAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  montant: number;
+  description: string | null;
+  quantite: number;
+  date: string;
+  businessId: string;
+  categoryId: string | null;
+  productId: string | null;
+  product?: { id: string; nom: string; prixVente: number; coutRevient: number } | null;
+  category?: { id: string; nom: string } | null;
+  createdAt: string;
+}
+
+export interface Charge {
+  id: string;
+  nom: string;
+  montant: number;
+  type: ChargeType;
+  frequence: ChargeFrequence;
+  actif: boolean;
+  businessId: string;
+  createdAt: string;
+}
+
+export interface FinancialReport {
+  id: string;
+  periode: ReportPeriode;
+  dateDebut: string;
+  dateFin: string;
+  contenu: string;
+  kpiSnapshot: KPISnapshot;
+  businessId: string;
+  createdAt: string;
+}
+
+export interface KPISnapshot {
+  ca: number;
+  depenses: number;
+  sorties: number;
+  resultat: number;
+  marge: number;
+  nbTransactions: number;
+  topProduits: Array<{ nom: string; ca: number; marge: number }>;
+  evolutionCA: number;
+  evolutionResultat: number;
+  chargesTotal: number;
+}
