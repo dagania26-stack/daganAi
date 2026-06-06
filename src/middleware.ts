@@ -13,11 +13,21 @@ const WINDOW_MS = 60_000
 export default auth((req) => {
   const { pathname } = req.nextUrl
 
-  // ── Protection des routes Gestion ────────────────────────────────────────
+  // ── Protection routes Gestion ─────────────────────────────────────────────
   if (pathname.startsWith("/gestion") && !req.auth) {
     const url = new URL("/connexion", req.nextUrl)
     url.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(url)
+  }
+
+  // ── Protection routes Admin ───────────────────────────────────────────────
+  if (pathname.startsWith("/admin")) {
+    if (!req.auth) {
+      return NextResponse.redirect(new URL("/connexion?callbackUrl=/admin", req.nextUrl))
+    }
+    if (req.auth.user?.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.nextUrl))
+    }
   }
 
   // ── Rate limiting /api/chat ───────────────────────────────────────────────
@@ -33,6 +43,21 @@ export default auth((req) => {
     if (!entry || now > entry.resetAt) {
       store.set(ip, { count: 1, resetAt: now + WINDOW_MS })
     } else if (entry.count >= LIMIT) {
+      // Notifier le service de log en fire-and-forget
+      const logUrl = new URL("/api/internal/log", req.nextUrl)
+      fetch(logUrl.toString(), {
+        method:  "POST",
+        headers: {
+          "Content-Type":   "application/json",
+          "x-internal-key": process.env.CRON_SECRET ?? "",
+        },
+        body: JSON.stringify({
+          type:    "RATE_LIMIT",
+          ip,
+          details: `Rate limit dépassé sur /api/chat (${LIMIT} req/min)`,
+        }),
+      }).catch(() => {})
+
       return NextResponse.json(
         { error: "Trop de requêtes. Veuillez patienter avant de réessayer." },
         {
@@ -54,5 +79,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/api/chat", "/gestion/:path*"],
+  matcher: ["/api/chat", "/gestion/:path*", "/admin/:path*", "/admin"],
 }

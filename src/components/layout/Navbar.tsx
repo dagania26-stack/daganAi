@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="sticky top-0 z-50 bg-warm-white/95 backdrop-blur-sm border-b border-border-custom">
@@ -61,6 +63,18 @@ export default function Navbar() {
           >
             <i className="fi fi-rr-comment-alt text-sm" aria-hidden="true" />
             Commencer
+          </Link>
+          <Link
+            href={session ? "/gestion" : "/connexion"}
+            className={cn(
+              "inline-flex items-center gap-1.5 min-h-[38px]",
+              "border border-border-custom text-dark font-display font-semibold text-sm",
+              "px-4 py-2 rounded-lg",
+              "hover:bg-surface active:scale-95 transition-all duration-150",
+            )}
+          >
+            <i className={cn("fi text-sm", session ? "fi-rr-grid-alt" : "fi-rr-user")} aria-hidden="true" />
+            {session ? "Mon espace" : "Connexion"}
           </Link>
         </div>
 
@@ -108,6 +122,14 @@ export default function Navbar() {
           >
             <i className="fi fi-rr-comment-alt text-sm" aria-hidden="true" />
             Commencer maintenant
+          </Link>
+          <Link
+            href={session ? "/gestion" : "/connexion"}
+            onClick={() => setOpen(false)}
+            className="inline-flex items-center justify-center gap-2 border border-border-custom text-dark font-display font-semibold text-sm px-4 py-3 rounded-lg hover:bg-surface transition-colors min-h-[44px]"
+          >
+            <i className={cn("fi text-sm", session ? "fi-rr-grid-alt" : "fi-rr-user")} aria-hidden="true" />
+            {session ? "Mon espace" : "Connexion"}
           </Link>
         </div>
       </div>

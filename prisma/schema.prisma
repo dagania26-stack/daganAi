@@ -8,6 +8,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SecurityEventType {
+  RATE_LIMIT
+  FAILED_AUTH
+  SUSPICIOUS
+  BRUTE_FORCE
+}
+
 // ─── Auth (NextAuth / Auth.js v5) ─────────────────────────────────────────────
 
 model User {
@@ -16,14 +30,23 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  role          Role      @default(USER)
+  pays          String?
+  ville         String?
+  lastIp        String?
+  lastLogin     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts   Account[]
-  sessions   Session[]
-  businesses Business[]
+  accounts     Account[]
+  sessions     Session[]
+  businesses   Business[]
+  chatLogs     ChatLog[]
+  securityLogs SecurityLog[]
 
   @@index([email])
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Account {
@@ -63,6 +86,41 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ─── Logs admin ───────────────────────────────────────────────────────────────
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  question  String   @db.Text
+  mode      String   @default("rag") // "rag" | "claude-direct" | "error"
+  erreur    String?  @db.Text
+  success   Boolean  @default(true)
+  latenceMs Int?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([success])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SecurityLog {
+  id        String            @id @default(cuid())
+  type      SecurityEventType
+  ip        String?
+  userId    String?
+  details   String?           @db.Text
+  createdAt DateTime          @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([ip])
+  @@index([createdAt])
 }
 
 // ─── Documents ────────────────────────────────────────────────────────────────
@@ -150,16 +208,16 @@ model MessageChunk {
 // ─── Dagan Gestion — Module financier ────────────────────────────────────────
 
 model Business {
-  id                 String    @id @default(cuid())
-  nom                String
-  secteur            String?
-  pays               String    @default("TG")
-  devise             String    @default("FCFA")
-  userId             String?
-  rapportFrequence   String?   // "HEBDO" | "MENSUEL" | null
+  id                  String    @id @default(cuid())
+  nom                 String
+  secteur             String?
+  pays                String    @default("TG")
+  devise              String    @default("FCFA")
+  userId              String?
+  rapportFrequence    String?
   rapportDernierEnvoi DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user         User?             @relation(fields: [userId], references: [id])
   categories   Category[]
@@ -176,7 +234,7 @@ model Business {
 model Category {
   id         String @id @default(cuid())
   nom        String
-  type       String // "VENTE" | "ACHAT" | "CHARGE"
+  type       String
   businessId String
 
   business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -206,7 +264,7 @@ model Product {
 
 model Transaction {
   id          String   @id @default(cuid())
-  type        String   // "ENTREE" | "SORTIE"
+  type        String
   montant     Float
   description String?
   quantite    Float    @default(1)
@@ -228,8 +286,8 @@ model Charge {
   id         String   @id @default(cuid())
   nom        String
   montant    Float
-  type       String   // "FIXE" | "VARIABLE"
-  frequence  String   @default("MENSUEL") // "MENSUEL" | "HEBDO" | "ANNUEL"
+  type       String
+  frequence  String   @default("MENSUEL")
   actif      Boolean  @default(true)
   businessId String
   createdAt  DateTime @default(now())
@@ -246,7 +304,7 @@ model Debt {
   montantRestant Float
   creancier      String
   dateEcheance   DateTime?
-  statut         String    @default("EN_COURS") // "EN_COURS" | "REMBOURSE" | "EN_RETARD"
+  statut         String    @default("EN_COURS")
   businessId     String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -258,7 +316,7 @@ model Debt {
 
 model FinancialReport {
   id          String   @id @default(cuid())
-  periode     String   // "HEBDO" | "MENSUEL"
+  periode     String
   dateDebut   DateTime
   dateFin     DateTime
   contenu     String   @db.Text
