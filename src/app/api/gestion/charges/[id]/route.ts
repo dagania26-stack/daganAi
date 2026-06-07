@@ -21,9 +21,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!charge) return NextResponse.json({ error: "Introuvable" }, { status: 404 })
 
   const body = await req.json()
+  const data: Record<string, unknown> = {}
+  if (typeof body.nom === "string")        data.nom       = body.nom
+  if (typeof body.montant === "number")    data.montant   = body.montant
+  if (body.type === "FIXE" || body.type === "VARIABLE")              data.type      = body.type
+  if (body.frequence === "MENSUEL" || body.frequence === "HEBDO" || body.frequence === "ANNUEL") data.frequence = body.frequence
+  if (typeof body.actif === "boolean")     data.actif     = body.actif
+
   const updated = await prisma.charge.update({
     where: { id: params.id },
-    data:  body,
+    data,
   })
 
   return NextResponse.json(updated)

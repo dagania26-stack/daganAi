@@ -83,14 +83,7 @@ export async function sendOtpEmail(to: string, code: string, type: "REGISTER" | 
     subject,
     html,
   })
-  console.log("[sendOtpEmail] envoyé:", {
-    to,
-    type,
-    messageId: info.messageId,
-    accepted:  info.accepted,
-    rejected:  info.rejected,
-    response:  info.response,
-  })
+  console.log("[sendOtpEmail] envoyé:", { type, messageId: info.messageId })
 }
 
 // ─── Rapport financier ────────────────────────────────────────────────────────

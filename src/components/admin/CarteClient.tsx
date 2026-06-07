@@ -48,6 +48,23 @@ interface UserGeo {
   lastLogin: string | null
 }
 
+function exportCSV(byPays: Record<string, UserGeo[]>) {
+  const header = "Pays,Nom du pays,Utilisateurs,Actifs (7j),Inactifs (8-30j),Dormants (>30j)"
+  const rows = Object.entries(byPays).map(([code, users]) => {
+    const now = Date.now()
+    const days = (u: UserGeo) => u.lastLogin ? (now - new Date(u.lastLogin).getTime()) / 86400_000 : Infinity
+    const active   = users.filter(u => days(u) <= 7).length
+    const inactive = users.filter(u => { const d = days(u); return d > 7 && d <= 30 }).length
+    const dormant  = users.filter(u => days(u) > 30).length
+    return [code, COUNTRY_COORDS[code]?.name ?? code, users.length, active, inactive, dormant]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")
+  })
+  const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement("a"); a.href = url; a.download = "cartographie-pays.csv"; a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function CarteClient() {
   const [users,   setUsers]   = useState<UserGeo[]>([])
   const [loading, setLoading] = useState(true)
@@ -91,11 +108,21 @@ export default function CarteClient() {
   return (
     <div className="p-6 lg:p-8 space-y-5">
 
-      <div>
-        <h1 className="font-display font-bold text-dark text-2xl">Cartographie</h1>
-        <p className="font-sans text-muted text-sm mt-0.5">
-          Distribution géographique des {users.length} utilisateurs
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display font-bold text-dark text-2xl">Cartographie</h1>
+          <p className="font-sans text-muted text-sm mt-0.5">
+            Distribution géographique des {users.length} utilisateurs
+          </p>
+        </div>
+        <button
+          onClick={() => exportCSV(byPays)}
+          disabled={loading || Object.keys(byPays).length === 0}
+          className="flex items-center gap-2 border border-border-custom rounded-xl px-4 py-2 font-display font-semibold text-sm text-dark hover:bg-surface transition-colors disabled:opacity-40"
+        >
+          <i className="fi fi-rr-file-csv text-base" />
+          Exporter
+        </button>
       </div>
 
       {/* Légende + filtres */}

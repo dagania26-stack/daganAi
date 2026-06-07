@@ -9,6 +9,7 @@ export async function GET() {
   const debts = await prisma.debt.findMany({
     where:   { businessId: auth.business.id },
     orderBy: [{ statut: "asc" }, { createdAt: "desc" }],
+    take:    2000,
   })
 
   return NextResponse.json(debts)

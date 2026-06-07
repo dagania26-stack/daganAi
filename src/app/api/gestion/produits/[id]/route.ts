@@ -21,9 +21,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!product) return NextResponse.json({ error: "Introuvable" }, { status: 404 })
 
   const body = await req.json()
+  const data: Record<string, unknown> = {}
+  if (typeof body.nom === "string")          data.nom         = body.nom
+  if (typeof body.prixVente === "number")    data.prixVente   = body.prixVente
+  if (typeof body.coutRevient === "number")  data.coutRevient = body.coutRevient
+  if (typeof body.unite === "string")        data.unite       = body.unite
+  if (typeof body.actif === "boolean")       data.actif       = body.actif
+  if (body.categoryId === null || typeof body.categoryId === "string") data.categoryId = body.categoryId
+
   const updated = await prisma.product.update({
     where:   { id: params.id },
-    data:    body,
+    data,
     include: { category: { select: { id: true, nom: true } } },
   })
 

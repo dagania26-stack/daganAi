@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans } from "next/font/google";
 import { SwRegister } from "@/components/SwRegister";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CookieConsent from "@/components/CookieConsent";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import "./globals.css";
 
@@ -117,6 +118,7 @@ export default function RootLayout({
           {children}
         </SessionProvider>
         <WhatsAppButton />
+        <CookieConsent />
         <SwRegister />
       </body>
     </html>

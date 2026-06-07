@@ -10,6 +10,7 @@ export async function GET() {
     where:   { businessId: auth.business.id },
     include: { category: { select: { id: true, nom: true } }, product: { select: { id: true, nom: true } } },
     orderBy: { date: "desc" },
+    take:    2000,
   })
 
   return NextResponse.json(transactions)

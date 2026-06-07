@@ -10,6 +10,8 @@ const NAV = [
   { href: "/admin/logs",         icon: "fi-rr-comment-alt",     label: "Logs"                },
   { href: "/admin/securite",     icon: "fi-rr-shield-check",    label: "Sécurité"            },
   { href: "/admin/carte",        icon: "fi-rr-map-marker",      label: "Carte"               },
+  { href: "/admin/annonces",     icon: "fi-rr-megaphone",       label: "Annonces"            },
+  { href: "/admin/sante",        icon: "fi-rr-heart-rate",      label: "Santé"               },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -18,6 +20,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/logs":         "Logs Chat",
   "/admin/securite":     "Sécurité",
   "/admin/carte":        "Cartographie",
+  "/admin/annonces":     "Annonces",
+  "/admin/sante":        "Santé système",
 }
 
 interface Props {

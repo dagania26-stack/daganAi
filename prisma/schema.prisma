@@ -22,6 +22,12 @@ enum SecurityEventType {
   BRUTE_FORCE
 }
 
+enum AnnouncementLevel {
+  INFO
+  SUCCESS
+  WARNING
+}
+
 // ─── Auth (NextAuth / Auth.js v5) ─────────────────────────────────────────────
 
 model User {
@@ -39,11 +45,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  businesses   Business[]
-  chatLogs     ChatLog[]
-  securityLogs SecurityLog[]
+  accounts      Account[]
+  sessions      Session[]
+  businesses    Business[]
+  chatLogs      ChatLog[]
+  securityLogs  SecurityLog[]
+  announcements Announcement[]
 
   @@index([email])
   @@index([role])
@@ -142,6 +149,22 @@ model SecurityLog {
 
   @@index([type])
   @@index([ip])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id        String            @id @default(cuid())
+  title     String
+  message   String            @db.Text
+  level     AnnouncementLevel @default(INFO)
+  active    Boolean           @default(true)
+  authorId  String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([active])
   @@index([createdAt])
 }
 

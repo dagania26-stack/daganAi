@@ -56,7 +56,8 @@ export async function POST(req: Request) {
   const buffer   = await renderToBuffer(doc)
   const uint8arr = new Uint8Array(buffer)
 
-  const filename = `rapport-dagan-${auth.business.nom.toLowerCase().replace(/\s+/g, "-")}-${now.toISOString().slice(0, 10)}.pdf`
+  const safeNom  = auth.business.nom.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+  const filename = `rapport-dagan-${safeNom || "business"}-${now.toISOString().slice(0, 10)}.pdf`
 
   return new Response(uint8arr, {
     headers: {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyOtp } from "@/lib/otp"
+import { getRequestGeo } from "@/lib/geoip"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -29,12 +30,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Session expirée. Recommencez l'inscription." }, { status: 400 })
     }
 
+    const { ip, pays, ville } = getRequestGeo(req.headers)
+
     const user = await prisma.user.create({
       data: {
         email:         pending.email,
         name:          pending.name,
         password:      pending.password,
         emailVerified: new Date(),
+        lastIp:        ip,
+        lastLogin:     new Date(),
+        pays,
+        ville,
       },
     })
 

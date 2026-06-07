@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma"
 const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
 
 export function generateOtp(): string {
-  return String(Math.floor(100_000 + Math.random() * 900_000))
+  const buf = new Uint32Array(1)
+  crypto.getRandomValues(buf)
+  return String(100_000 + (buf[0] % 900_000))
 }
 
 export async function createOtp(email: string, type: "REGISTER" | "RESET_PASSWORD"): Promise<string> {

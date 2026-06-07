@@ -9,6 +9,7 @@ export async function GET() {
   const charges = await prisma.charge.findMany({
     where:   { businessId: auth.business.id },
     orderBy: [{ actif: "desc" }, { createdAt: "desc" }],
+    take:    2000,
   })
 
   return NextResponse.json(charges)

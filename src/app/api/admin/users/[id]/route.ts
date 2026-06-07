@@ -23,7 +23,11 @@ export async function PATCH(
     if (body[key] !== undefined) data[key] = body[key]
   }
 
-  const user = await prisma.user.update({ where: { id: params.id }, data })
+  const user = await prisma.user.update({
+    where:  { id: params.id },
+    data,
+    select: { id: true, name: true, email: true, role: true, pays: true, ville: true },
+  })
   return NextResponse.json({ user })
 }
 
