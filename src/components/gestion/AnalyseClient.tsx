@@ -2,10 +2,16 @@
 
 import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
+import PeriodSelector from "@/components/gestion/PeriodSelector"
 
 type Status = "idle" | "streaming" | "done" | "error"
 
-export default function AnalyseClient() {
+interface Props {
+  periodeJours: number
+  periode:      string
+}
+
+export default function AnalyseClient({ periodeJours, periode }: Props) {
   const [text, setText]     = useState("")
   const [status, setStatus] = useState<Status>("idle")
   const abortRef            = useRef<AbortController | null>(null)
@@ -18,7 +24,7 @@ export default function AnalyseClient() {
     setStatus("streaming")
 
     try {
-      const res = await fetch("/api/gestion/analyse", { signal: ctrl.signal })
+      const res = await fetch(`/api/gestion/analyse?jours=${periodeJours}`, { signal: ctrl.signal })
       if (!res.ok) throw new Error("Erreur serveur")
       const reader = res.body!.getReader()
       const dec    = new TextDecoder()
@@ -32,7 +38,7 @@ export default function AnalyseClient() {
     } catch (err: any) {
       if (err.name !== "AbortError") setStatus("error")
     }
-  }, [])
+  }, [periodeJours])
 
   const copyText = useCallback(() => {
     if (!text) return
@@ -79,10 +85,11 @@ export default function AnalyseClient() {
         <Link href="/gestion" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors">
           <i className="fi fi-rr-angle-left text-muted" />
         </Link>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="font-display font-bold text-dark text-xl">Analyse DaganAI</h1>
-          <p className="font-sans text-muted text-sm">Analyse stratégique de votre activité (90 derniers jours)</p>
+          <p className="font-sans text-muted text-sm truncate">Analyse stratégique de votre activité ({periode})</p>
         </div>
+        <PeriodSelector value={periodeJours} disabled={status === "streaming"} />
       </div>
 
       {/* Action bar */}
@@ -151,7 +158,7 @@ export default function AnalyseClient() {
 
       {status === "done" && (
         <p className="font-sans text-muted text-xs text-center">
-          Analyse générée par Claude (Anthropic). Basée sur vos données des 90 derniers jours.
+          Analyse générée par Claude (Anthropic). Basée sur vos données des {periode}.
         </p>
       )}
     </div>

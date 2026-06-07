@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 // Motif Kente discret en CSS pur (grille + diagonales, opacité 0.08-0.10)
 const KENTE_PATTERN = [
@@ -27,13 +28,16 @@ export default function Header() {
         </Link>
 
         {/* Logo + tagline */}
-        <div className="flex flex-col leading-none text-center">
-          <span className="font-display font-extrabold text-base sm:text-xl text-white tracking-tight">
-            Dagan IA
-          </span>
-          <span className="hidden sm:block text-xs text-white/70 italic font-sans mt-0.5">
-            Grande Sœur Numérique
-          </span>
+        <div className="flex items-center gap-2.5">
+          <Image src="/logo.png" alt="Dagan IA" width={32} height={32} className="rounded-lg shrink-0" />
+          <div className="flex flex-col leading-none text-left">
+            <span className="font-display font-extrabold text-base sm:text-xl text-white tracking-tight">
+              Dagan IA
+            </span>
+            <span className="hidden sm:block text-xs text-white/70 italic font-sans mt-0.5">
+              Grande Sœur Numérique
+            </span>
+          </div>
         </div>
 
         {/* Spacer pour équilibrer le bouton retour */}

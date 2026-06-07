@@ -2,10 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import PeriodSelector from "@/components/gestion/PeriodSelector"
 
 interface Props {
-  businessNom: string
-  userEmail:   string
+  businessNom:  string
+  userEmail:    string
+  periodeJours: number
+  periode:      string
   kpis: { ca: number; depenses: number; benefice: number; chargesMois: number; encours: number }
 }
 
@@ -13,20 +16,18 @@ type ExportStatus = "idle" | "loading" | "done" | "error"
 
 function fmt(n: number) { return new Intl.NumberFormat("fr-FR").format(Math.round(n)) + " FCFA" }
 
-export default function RapportClient({ businessNom, userEmail, kpis }: Props) {
+export default function RapportClient({ businessNom, userEmail, periodeJours, periode, kpis }: Props) {
   const [analyseText, setAnalyseText] = useState("")
   const [analyseStatus, setAnalyseStatus] = useState<"idle" | "loading" | "done">("idle")
   const [pdfStatus,   setPdfStatus]   = useState<ExportStatus>("idle")
   const [emailStatus, setEmailStatus] = useState<ExportStatus>("idle")
   const [copied, setCopied]           = useState(false)
 
-  const periode = "90 derniers jours"
-
   async function loadAnalyse() {
     if (analyseStatus !== "idle") return
     setAnalyseStatus("loading")
     try {
-      const res = await fetch("/api/gestion/analyse")
+      const res = await fetch(`/api/gestion/analyse?jours=${periodeJours}`)
       const reader = res.body!.getReader()
       const dec    = new TextDecoder()
       let full     = ""
@@ -49,7 +50,7 @@ export default function RapportClient({ businessNom, userEmail, kpis }: Props) {
       const res = await fetch("/api/gestion/rapport/pdf", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ analyseText, periode }),
+        body:    JSON.stringify({ analyseText, periodeJours }),
       })
       if (!res.ok) throw new Error()
       const blob = await res.blob()
@@ -73,7 +74,7 @@ export default function RapportClient({ businessNom, userEmail, kpis }: Props) {
       const res = await fetch("/api/gestion/rapport/email", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ analyseText, periode }),
+        body:    JSON.stringify({ analyseText, periodeJours }),
       })
       if (!res.ok) throw new Error()
       setEmailStatus("done")
@@ -118,10 +119,11 @@ export default function RapportClient({ businessNom, userEmail, kpis }: Props) {
         <Link href="/gestion" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors">
           <i className="fi fi-rr-angle-left text-muted" />
         </Link>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="font-display font-bold text-dark text-xl">Rapport complet</h1>
-          <p className="font-sans text-muted text-sm">{businessNom} — {periode}</p>
+          <p className="font-sans text-muted text-sm truncate">{businessNom} — {periode}</p>
         </div>
+        <PeriodSelector value={periodeJours} />
       </div>
 
       {/* KPI snapshot */}

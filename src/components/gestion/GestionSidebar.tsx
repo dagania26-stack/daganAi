@@ -32,7 +32,7 @@ export default function GestionSidebar({ user }: Props) {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-border-custom">
         <Link href="/gestion" className="flex items-center gap-2.5 group">
-          <Image src="/icons/icon-192x192.svg" alt="Dagan IA" width={26} height={26} className="rounded-md" />
+          <Image src="/logo.png" alt="Dagan IA" width={36} height={36} className="rounded-lg" />
           <div>
             <p className="font-display font-bold text-dark text-sm leading-tight">Dagan</p>
             <p className="font-sans text-muted text-xs">Gestion</p>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireBusiness } from "@/lib/gestion"
 import { sendRapportEmail } from "@/lib/email"
 import { auth } from "@/auth"
+import { parsePeriodDays, periodLabel } from "@/lib/periode"
 
 export async function POST(req: Request) {
   const guard = await requireBusiness()
@@ -14,10 +15,11 @@ export async function POST(req: Request) {
 
   const body        = await req.json().catch(() => ({}))
   const analyseText = (body.analyseText as string) ?? ""
-  const periode     = (body.periode as string) ?? "90 derniers jours"
+  const jours       = parsePeriodDays(body.periodeJours != null ? String(body.periodeJours) : null)
+  const periode     = periodLabel(jours)
 
   const since = new Date()
-  since.setDate(since.getDate() - 90)
+  since.setDate(since.getDate() - jours)
 
   const [transactions, charges, debts] = await Promise.all([
     prisma.transaction.findMany({ where: { businessId: guard.business.id, date: { gte: since } } }),

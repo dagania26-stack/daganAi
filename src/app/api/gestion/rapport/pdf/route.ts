@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import { prisma } from "@/lib/prisma"
 import { requireBusiness } from "@/lib/gestion"
 import { RapportPDF } from "@/components/gestion/RapportPDF"
+import { parsePeriodDays, periodLabel } from "@/lib/periode"
 
 function toMonthly(montant: number, frequence: string) {
   if (frequence === "ANNUEL") return montant / 12
@@ -16,10 +17,11 @@ export async function POST(req: Request) {
 
   const body        = await req.json().catch(() => ({}))
   const analyseText = (body.analyseText as string) ?? ""
-  const periode     = (body.periode as string) ?? "30 derniers jours"
+  const jours       = parsePeriodDays(body.periodeJours != null ? String(body.periodeJours) : null)
+  const periode     = periodLabel(jours)
 
   const since = new Date()
-  since.setDate(since.getDate() - 90)
+  since.setDate(since.getDate() - jours)
 
   const [transactions, charges, debts] = await Promise.all([
     prisma.transaction.findMany({

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { prisma } from "@/lib/prisma"
 import { requireBusiness } from "@/lib/gestion"
+import { parsePeriodDays, periodLabel } from "@/lib/periode"
 
 const client = new Anthropic()
 
@@ -9,11 +10,13 @@ export async function GET(req: Request) {
   const auth = await requireBusiness()
   if (!auth.ok) return auth.response
 
-  const since90d = new Date(); since90d.setDate(since90d.getDate() - 90)
+  const jours  = parsePeriodDays(new URL(req.url).searchParams.get("jours"))
+  const periode = periodLabel(jours)
+  const since   = new Date(); since.setDate(since.getDate() - jours)
 
   const [transactions, charges, debts, products] = await Promise.all([
     prisma.transaction.findMany({
-      where:   { businessId: auth.business.id, date: { gte: since90d } },
+      where:   { businessId: auth.business.id, date: { gte: since } },
       include: { category: { select: { nom: true } } },
       orderBy: { date: "desc" },
     }),
@@ -64,9 +67,9 @@ export async function GET(req: Request) {
 
   const prompt = `Tu es DaganAI, l'assistante financière intelligente de Dagan IA — une plateforme conçue pour les femmes entrepreneures en Afrique de l'Ouest (Togo, Bénin).
 
-Voici les données financières réelles de l'entreprise "${auth.business.nom}" sur les 90 derniers jours :
+Voici les données financières réelles de l'entreprise "${auth.business.nom}" sur les ${periode} :
 
-## RÉSUMÉ FINANCIER (90 jours)
+## RÉSUMÉ FINANCIER (${periode})
 - Chiffre d'affaires : ${ca.toLocaleString("fr-FR")} FCFA
 - Dépenses totales   : ${depenses.toLocaleString("fr-FR")} FCFA
 - Bénéfice net       : ${benefice.toLocaleString("fr-FR")} FCFA (${ca > 0 ? ((benefice / ca) * 100).toFixed(1) : 0}% de marge)

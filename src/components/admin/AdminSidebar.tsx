@@ -30,7 +30,7 @@ export default function AdminSidebar({ user }: Props) {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5">
-          <Image src="/icons/icon-192x192.svg" alt="Dagan IA" width={26} height={26} className="rounded-md opacity-90" />
+          <Image src="/logo.png" alt="Dagan IA" width={36} height={36} className="rounded-lg" />
           <div>
             <p className="font-display font-bold text-white text-sm leading-tight">Dagan IA</p>
             <p className="font-sans text-white/40 text-xs">Administration</p>

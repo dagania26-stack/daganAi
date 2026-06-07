@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import RapportClient from "@/components/gestion/RapportClient"
+import { parsePeriodDays, periodLabel } from "@/lib/periode"
 
 function toMonthly(montant: number, frequence: string) {
   if (frequence === "ANNUEL") return montant / 12
@@ -9,14 +10,15 @@ function toMonthly(montant: number, frequence: string) {
   return montant
 }
 
-export default async function RapportPage() {
+export default async function RapportPage({ searchParams }: { searchParams: { jours?: string } }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/connexion?callbackUrl=/gestion/rapport")
 
   const business = await prisma.business.findFirst({ where: { userId: session.user.id } })
   if (!business) redirect("/gestion/setup")
 
-  const since = new Date(); since.setDate(since.getDate() - 90)
+  const jours = parsePeriodDays(searchParams.jours)
+  const since = new Date(); since.setDate(since.getDate() - jours)
 
   const [transactions, charges, debts] = await Promise.all([
     prisma.transaction.findMany({ where: { businessId: business.id, date: { gte: since } } }),
@@ -32,8 +34,11 @@ export default async function RapportPage() {
 
   return (
     <RapportClient
+      key={jours}
       businessNom={business.nom}
       userEmail={session.user.email ?? ""}
+      periodeJours={jours}
+      periode={periodLabel(jours)}
       kpis={{ ca, depenses, benefice, chargesMois, encours }}
     />
   )
