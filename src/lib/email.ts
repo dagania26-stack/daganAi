@@ -6,7 +6,7 @@ function getTransporter() {
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.GMAIL_USER ?? "dagania26@gmail.com",
+      user: process.env.GMAIL_USER ?? "societedilari@gmail.com",
       pass: process.env.GMAIL_APP_PASSWORD,
     },
   })
@@ -77,11 +77,19 @@ export async function sendOtpEmail(to: string, code: string, type: "REGISTER" | 
 </html>`
 
   const transporter = getTransporter()
-  await transporter.sendMail({
-    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "dagania26@gmail.com"}>`,
+  const info = await transporter.sendMail({
+    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
     to,
     subject,
     html,
+  })
+  console.log("[sendOtpEmail] envoyé:", {
+    to,
+    type,
+    messageId: info.messageId,
+    accepted:  info.accepted,
+    rejected:  info.rejected,
+    response:  info.response,
   })
 }
 
@@ -140,7 +148,7 @@ export async function sendRapportEmail(opts: {
 
   const transporter = getTransporter()
   await transporter.sendMail({
-    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "dagania26@gmail.com"}>`,
+    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
     to,
     subject: `Rapport financier — ${businessNom} (${periode})`,
     html,
