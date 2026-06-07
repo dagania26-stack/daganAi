@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 
 type Level = "INFO" | "SUCCESS" | "WARNING"
 
@@ -60,7 +61,10 @@ export default function AnnouncementBanner() {
             <i className={`fi ${cfg.icon} ${cfg.iconColor} text-base mt-0.5 shrink-0`} aria-hidden="true" />
             <div className="min-w-0">
               <p className="font-display font-bold text-dark text-sm">{a.title}</p>
-              <p className="font-sans text-muted text-xs mt-0.5 leading-relaxed">{a.message}</p>
+              <div
+                className="rte-render font-sans text-muted text-xs mt-0.5 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizeAnnouncementHtml(a.message) }}
+              />
             </div>
             <button
               onClick={() => dismiss(a.id)}

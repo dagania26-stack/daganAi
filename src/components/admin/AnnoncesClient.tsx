@@ -2,6 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react"
 import ConfirmDialog from "@/components/gestion/ConfirmDialog"
+import RichTextEditor from "@/components/admin/RichTextEditor"
+import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
+
+// Résumé en texte brut pour les aperçus en liste (line-clamp)
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()
+}
 
 type Level   = "INFO" | "SUCCESS" | "WARNING"
 type Segment = "ALL" | "ACTIVE" | "INACTIVE" | "DORMANT"
@@ -48,6 +55,7 @@ export default function AnnoncesClient() {
   const [delTarget, setDelTarget]   = useState<Announcement | null>(null)
   const [deleting, setDeleting]     = useState(false)
   const [toast, setToast]           = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
@@ -197,7 +205,7 @@ export default function AnnoncesClient() {
                 <i className="fi fi-rr-cross text-sm" />
               </button>
             </div>
-            <p className="font-sans text-dark text-sm leading-relaxed whitespace-pre-wrap mb-4">{viewing.message}</p>
+            <div className="rte-render font-sans text-dark text-sm mb-4" dangerouslySetInnerHTML={{ __html: sanitizeAnnouncementHtml(viewing.message) }} />
             <div className="flex flex-wrap gap-2">
               <span className={`inline-flex items-center gap-1.5 text-xs font-display font-semibold px-2.5 py-1 rounded-lg ${LEVEL_CONFIG[viewing.level].color}`}>
                 <i className={`fi ${LEVEL_CONFIG[viewing.level].icon} text-xs`} />
@@ -213,6 +221,44 @@ export default function AnnoncesClient() {
                 <i className={`fi ${viewing.active ? "fi-rr-paper-plane" : "fi-rr-file-edit"} text-xs`} />
                 {viewing.active ? "Diffusée" : "Brouillon"}
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale Aperçu — rendu HTML propre tel que vu par les utilisatrices */}
+      {previewOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/40 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
+          <div className="bg-white rounded-2xl border border-border-custom shadow-xl w-full max-w-lg animate-fade-in-up overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border-custom">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-terracotta/10 flex items-center justify-center shrink-0">
+                  <i className="fi fi-rr-eye text-terracotta text-sm" />
+                </div>
+                <div>
+                  <p className="font-display font-bold text-dark text-sm">Aperçu du résultat</p>
+                  <p className="font-sans text-muted text-xs mt-0.5">Rendu HTML tel qu&apos;il apparaîtra dans le tableau de bord et l&apos;email</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewOpen(false)} className="p-2 text-muted hover:text-dark hover:bg-surface rounded-lg transition-colors shrink-0">
+                <i className="fi fi-rr-cross text-sm" />
+              </button>
+            </div>
+            <div className="p-5 max-h-[60vh] overflow-y-auto">
+              <div className="flex items-start gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${LEVEL_CONFIG[form.level].color}`}>
+                  <i className={`fi ${LEVEL_CONFIG[form.level].icon} text-base`} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-display font-bold text-dark text-base">{form.title || "(Titre de l'annonce)"}</p>
+                  <p className="font-sans text-muted text-xs mt-0.5">Dagan IA · à l&apos;instant</p>
+                </div>
+              </div>
+              {stripHtml(form.message) ? (
+                <div className="rte-render font-sans text-dark text-sm border border-border-custom rounded-xl p-4 bg-surface/40" dangerouslySetInnerHTML={{ __html: sanitizeAnnouncementHtml(form.message) }} />
+              ) : (
+                <p className="font-sans text-muted text-sm italic">Le message est vide.</p>
+              )}
             </div>
           </div>
         </div>
@@ -296,10 +342,20 @@ export default function AnnoncesClient() {
                 placeholder="ex: Nouvelle fonctionnalité disponible" className={INPUT} />
             </div>
             <div>
-              <label className="block font-display font-semibold text-dark text-sm mb-1.5">Message</label>
-              <textarea required rows={3} value={form.message}
-                onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                placeholder="Décrivez l'annonce destinée aux utilisatrices…" className={`${INPUT} resize-none`} />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block font-display font-semibold text-dark text-sm">Message</label>
+                <button type="button" onClick={() => setPreviewOpen(true)}
+                  disabled={!stripHtml(form.message)}
+                  className="flex items-center gap-1.5 text-xs font-display font-semibold text-terracotta hover:text-[#a33a0c] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  <i className="fi fi-rr-eye text-xs" />
+                  Aperçu du résultat
+                </button>
+              </div>
+              <RichTextEditor
+                value={form.message}
+                onChange={html => setForm(f => ({ ...f, message: html }))}
+                placeholder="Décrivez l'annonce destinée aux utilisatrices…"
+              />
             </div>
             <div>
               <label className="block font-display font-semibold text-dark text-sm mb-2">Type</label>
@@ -364,7 +420,7 @@ export default function AnnoncesClient() {
                         {seg.label}
                       </span>
                     </div>
-                    <p className="font-sans text-muted text-sm mt-1.5 leading-relaxed line-clamp-2">{a.message}</p>
+                    <p className="font-sans text-muted text-sm mt-1.5 leading-relaxed line-clamp-2">{stripHtml(a.message)}</p>
                     <p className="font-sans text-xs text-muted/70 mt-2">
                       {a.author?.name ?? a.author?.email ?? "Admin"} · {new Date(a.createdAt).toLocaleString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>

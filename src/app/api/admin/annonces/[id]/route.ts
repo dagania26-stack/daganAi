@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 
 const LEVELS   = ["INFO", "SUCCESS", "WARNING"] as const
 const SEGMENTS = ["ALL", "ACTIVE", "INACTIVE", "DORMANT"] as const
+
+// Un message HTML "vide" (ex: "<p></p>") ne doit pas passer la validation de présence
+function hasTextContent(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;|\s/g, "").length > 0
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -30,8 +36,8 @@ export async function PATCH(
     data.title = title
   }
   if (typeof body.message === "string") {
-    const message = body.message.trim()
-    if (!message) return NextResponse.json({ error: "Message requis" }, { status: 400 })
+    const message = sanitizeAnnouncementHtml(body.message.trim())
+    if (!hasTextContent(message)) return NextResponse.json({ error: "Message requis" }, { status: 400 })
     data.message = message
   }
 

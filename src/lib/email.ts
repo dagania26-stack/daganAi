@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer"
+import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 
 // ─── Transporteur Gmail ───────────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ export async function sendAnnouncementEmail(to: string, opts: {
 }) {
   const { level } = opts
   const title   = escapeHtml(opts.title)
-  const message = escapeHtml(opts.message)
+  const message = sanitizeAnnouncementHtml(opts.message)
   const style   = ANNOUNCEMENT_LEVEL_STYLES[level]
 
   const html = `
@@ -140,9 +141,9 @@ export async function sendAnnouncementEmail(to: string, opts: {
               <p style="margin:16px 0 12px;color:#1A1A1A;font-size:18px;font-weight:700;line-height:1.4;">
                 ${title}
               </p>
-              <p style="margin:0;color:#3A352F;font-size:15px;line-height:1.7;white-space:pre-wrap;">
+              <div style="margin:0;color:#3A352F;font-size:15px;line-height:1.7;">
                 ${message}
-              </p>
+              </div>
               <div style="margin-top:28px;text-align:center;">
                 <a href="https://daganai.com" style="display:inline-block;background:#C1440E;color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:12px;">
                   Voir sur Dagan IA
