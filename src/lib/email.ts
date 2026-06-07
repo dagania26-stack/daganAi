@@ -86,6 +86,94 @@ export async function sendOtpEmail(to: string, code: string, type: "REGISTER" | 
   console.log("[sendOtpEmail] envoyé:", { type, messageId: info.messageId })
 }
 
+// ─── Annonces diffusées ───────────────────────────────────────────────────────
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
+const ANNOUNCEMENT_LEVEL_STYLES: Record<"INFO" | "SUCCESS" | "WARNING", { label: string; color: string; bg: string }> = {
+  INFO:    { label: "Information",    color: "#2563EB", bg: "#EFF6FF" },
+  SUCCESS: { label: "Bonne nouvelle", color: "#16A34A", bg: "#F0FDF4" },
+  WARNING: { label: "Important",      color: "#D97706", bg: "#FFFBEB" },
+}
+
+export async function sendAnnouncementEmail(to: string, opts: {
+  title:   string
+  message: string
+  level:   "INFO" | "SUCCESS" | "WARNING"
+}) {
+  const { level } = opts
+  const title   = escapeHtml(opts.title)
+  const message = escapeHtml(opts.message)
+  const style   = ANNOUNCEMENT_LEVEL_STYLES[level]
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F0EB;font-family:'DM Sans',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;border:1px solid #E8E0D8;">
+          <tr>
+            <td style="background:#C1440E;padding:32px 40px;text-align:center;">
+              <p style="margin:0;font-family:Arial,sans-serif;font-weight:700;color:#fff;font-size:22px;">Dagan IA</p>
+              <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:13px;">Grande Soeur Numerique</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px;">
+              <span style="display:inline-block;background:${style.bg};color:${style.color};font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:6px 14px;border-radius:999px;margin-bottom:16px;">
+                ${style.label}
+              </span>
+              <p style="margin:16px 0 12px;color:#1A1A1A;font-size:18px;font-weight:700;line-height:1.4;">
+                ${title}
+              </p>
+              <p style="margin:0;color:#3A352F;font-size:15px;line-height:1.7;white-space:pre-wrap;">
+                ${message}
+              </p>
+              <div style="margin-top:28px;text-align:center;">
+                <a href="https://daganai.com" style="display:inline-block;background:#C1440E;color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:12px;">
+                  Voir sur Dagan IA
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 40px;border-top:1px solid #F0EDE8;text-align:center;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">
+                &copy; ${new Date().getFullYear()} Dagan IA &mdash; daganai.com
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  const transporter = getTransporter()
+  const info = await transporter.sendMail({
+    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
+    to,
+    subject: `${opts.title} — Dagan IA`,
+    html,
+  })
+  console.log("[sendAnnouncementEmail] envoyé:", { to, messageId: info.messageId })
+}
+
 // ─── Rapport financier ────────────────────────────────────────────────────────
 
 export async function sendRapportEmail(opts: {

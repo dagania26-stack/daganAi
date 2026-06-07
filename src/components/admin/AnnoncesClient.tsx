@@ -114,15 +114,19 @@ export default function AnnoncesClient() {
     if (!sendTarget) return
     setSending(true)
     try {
-      const res = await fetch(`/api/admin/annonces/${sendTarget.id}`, {
-        method:  "PATCH",
+      const res = await fetch(`/api/admin/annonces/${sendTarget.id}/envoyer`, {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ active: true, targetSegment: sendSegment }),
+        body:    JSON.stringify({ targetSegment: sendSegment }),
       })
       if (!res.ok) throw new Error()
-      const updated = await res.json()
-      setAnnouncements(prev => prev.map(x => x.id === updated.id ? updated : x))
-      showToast(`Annonce envoyée — audience : ${SEGMENT_CONFIG[sendSegment].label}`)
+      const result = await res.json()
+      setAnnouncements(prev => prev.map(x => x.id === result.announcement.id ? result.announcement : x))
+      showToast(
+        result.total > 0
+          ? `Annonce envoyée à ${SEGMENT_CONFIG[sendSegment].label.toLowerCase()} — ${result.sent}/${result.total} email${result.total > 1 ? "s" : ""} délivré${result.sent > 1 ? "s" : ""}${result.failed > 0 ? `, ${result.failed} échec${result.failed > 1 ? "s" : ""}` : ""}`
+          : `Annonce diffusée — aucun destinataire avec adresse email dans ce segment`
+      )
       setSendTarget(null)
     } catch { showToast("Erreur lors de l'envoi") }
     finally  { setSending(false) }
@@ -224,7 +228,9 @@ export default function AnnoncesClient() {
               </div>
               <div className="min-w-0">
                 <p className="font-display font-bold text-dark text-base">Envoyer « {sendTarget.title} »</p>
-                <p className="font-sans text-muted text-sm mt-0.5">Choisissez le type de clients qui recevra cette annonce</p>
+                <p className="font-sans text-muted text-sm mt-0.5">
+                  Choisissez le type de clients à cibler — l&apos;annonce sera publiée dans leur tableau de bord et envoyée par email
+                </p>
               </div>
             </div>
             <div className="space-y-2 mb-5">
@@ -254,7 +260,7 @@ export default function AnnoncesClient() {
               <button onClick={handleSend} disabled={sending}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-terracotta text-white font-display font-semibold text-sm hover:bg-[#a33a0c] disabled:opacity-60 transition-colors">
                 <i className="fi fi-rr-paper-plane text-sm" />
-                {sending ? "Envoi…" : "Envoyer"}
+                {sending ? "Envoi en cours…" : "Envoyer (in-app + email)"}
               </button>
             </div>
           </div>
