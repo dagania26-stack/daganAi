@@ -36,8 +36,56 @@ function isRateLimited(map: Map<string, { count: number; resetAt: number }>, key
   return false
 }
 
-export default auth((req) => {
+// ── Mode maintenance — cache local avec TTL court (Prisma indisponible côté Edge) ─
+let maintenanceCache: { enabled: boolean; fetchedAt: number } | null = null
+const MAINTENANCE_TTL_MS = 20_000
+
+async function isMaintenanceEnabled(req: NextRequest): Promise<boolean> {
+  const now = Date.now()
+  if (maintenanceCache && now - maintenanceCache.fetchedAt < MAINTENANCE_TTL_MS) {
+    return maintenanceCache.enabled
+  }
+  try {
+    const url = new URL("/api/internal/maintenance", req.nextUrl)
+    const res = await fetch(url.toString(), {
+      headers: { "x-internal-key": process.env.CRON_SECRET ?? "" },
+      cache:   "no-store",
+    })
+    if (res.ok) {
+      const data = await res.json()
+      maintenanceCache = { enabled: !!data.enabled, fetchedAt: now }
+    } else if (!maintenanceCache) {
+      maintenanceCache = { enabled: false, fetchedAt: now }
+    }
+  } catch {
+    if (!maintenanceCache) maintenanceCache = { enabled: false, fetchedAt: now }
+  }
+  return maintenanceCache.enabled
+}
+
+function isMaintenanceBypass(pathname: string): boolean {
+  return (
+    pathname === "/maintenance" ||
+    pathname.startsWith("/connexion") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/api/internal") ||
+    pathname.startsWith("/api/health") ||
+    pathname.startsWith("/api/cron")
+  )
+}
+
+export default auth(async (req) => {
   const { pathname } = req.nextUrl
+
+  // ── Mode maintenance ──────────────────────────────────────────────────────
+  if (!isMaintenanceBypass(pathname)) {
+    const maintenanceOn = await isMaintenanceEnabled(req)
+    if (maintenanceOn && req.auth?.user?.role !== "ADMIN") {
+      return NextResponse.rewrite(new URL("/maintenance", req.nextUrl))
+    }
+  }
 
   // ── Protection routes Gestion ─────────────────────────────────────────────
   if (pathname.startsWith("/gestion") && !req.auth) {
@@ -100,14 +148,9 @@ export default auth((req) => {
 })
 
 export const config = {
+  // Toutes les routes sauf les assets statiques — nécessaire pour appliquer
+  // le mode maintenance à l'ensemble du site.
   matcher: [
-    "/api/chat",
-    "/api/auth/register",
-    "/api/auth/forgot-password",
-    "/api/auth/verify-otp",
-    "/api/auth/reset-password",
-    "/gestion/:path*",
-    "/admin/:path*",
-    "/admin",
+    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|sw.js|robots.txt|sitemap.xml|logo.png|og-image.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 }

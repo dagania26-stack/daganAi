@@ -156,23 +156,15 @@ export default function CarteClient() {
           </div>
         ) : (
           <div className="relative" style={{ paddingBottom: "50%" }}>
-            {/* Fond carte du monde */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/2000px-World_map_-_low_resolution.svg.png"
-              alt="Carte du monde"
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
-            />
-
             {/* Fond coloré */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#EBE5DF] to-[#F5F0EB]" />
 
-            {/* Continent overlay pour meilleur contraste */}
+            {/* Carte du monde (asset local) */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/2000px-World_map_-_low_resolution.svg.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-40"
+              src="/world-map.png"
+              alt="Carte du monde"
+              className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-50"
             />
 
             {/* Points utilisateurs par pays */}

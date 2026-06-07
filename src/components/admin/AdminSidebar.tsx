@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/carte",        icon: "fi-rr-map-marker",      label: "Cartographie"                },
   { href: "/admin/annonces",     icon: "fi-rr-megaphone",       label: "Annonces"                    },
   { href: "/admin/sante",        icon: "fi-rr-heart-rate",      label: "Santé système"               },
+  { href: "/admin/maintenance",  icon: "fi-rr-settings",        label: "Maintenance"                 },
 ]
 
 interface Props {

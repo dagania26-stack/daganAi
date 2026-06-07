@@ -60,6 +60,10 @@ export default function UserCRMClient() {
   const [saving,  setSaving]  = useState(false)
   const [toast,   setToast]   = useState<string | null>(null)
 
+  // Double confirmation requise pour accorder le rôle ADMIN
+  const [promoteStep, setPromoteStep] = useState<0 | 1 | 2>(0)
+  const [promoteText, setPromoteText] = useState("")
+
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
   const load = useCallback(async () => {
@@ -76,8 +80,23 @@ export default function UserCRMClient() {
   // Reset page on filter change
   useEffect(() => { setPage(1) }, [q, role, pays])
 
-  async function handleSave() {
+  function closeEdit() {
+    setEdit(null)
+    setPromoteStep(0)
+    setPromoteText("")
+  }
+
+  // L'octroi du rôle ADMIN exige une double confirmation avant l'enregistrement
+  function handleSaveClick() {
     if (!edit) return
+    const isPromotion = edit.role === "ADMIN" && edit.user.role !== "ADMIN"
+    if (isPromotion) { setPromoteStep(1); setPromoteText("") }
+    else doSave()
+  }
+
+  async function doSave() {
+    if (!edit) return
+    const isPromotion = edit.role === "ADMIN" && edit.user.role !== "ADMIN"
     setSaving(true)
     const res = await fetch(`/api/admin/users/${edit.user.id}`, {
       method:  "PATCH",
@@ -85,8 +104,11 @@ export default function UserCRMClient() {
       body:    JSON.stringify({ name: edit.name, role: edit.role, pays: edit.pays, ville: edit.ville }),
     })
     setSaving(false)
-    if (res.ok) { setEdit(null); showToast("Utilisateur mis à jour"); load() }
-    else showToast("Erreur lors de la sauvegarde")
+    if (res.ok) {
+      closeEdit()
+      showToast(isPromotion ? "Droits administrateur accordés" : "Utilisateur mis à jour")
+      load()
+    } else showToast("Erreur lors de la sauvegarde")
   }
 
   async function handleDelete() {
@@ -306,17 +328,85 @@ export default function UserCRMClient() {
 
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setEdit(null)}
+                onClick={closeEdit}
                 className="px-4 py-2.5 rounded-xl font-display font-semibold text-sm border border-border-custom hover:bg-surface transition-colors"
               >
                 Annuler
               </button>
               <button
-                onClick={handleSave}
+                onClick={handleSaveClick}
                 disabled={saving}
                 className="px-4 py-2.5 rounded-xl font-display font-semibold text-sm bg-terracotta text-white hover:bg-[#a33a0c] transition-colors disabled:opacity-60"
               >
                 {saving ? "Sauvegarde…" : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Promotion ADMIN — étape 1 : confirmation de l'intention */}
+      {promoteStep === 1 && edit && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+            <div className="w-12 h-12 bg-terracotta/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fi fi-rr-crown text-terracotta text-xl" />
+            </div>
+            <h2 className="font-display font-bold text-dark text-lg mb-2">Accorder les droits administrateur ?</h2>
+            <p className="font-sans text-muted text-sm mb-5">
+              <strong className="text-dark">{edit.user.name ?? edit.user.email}</strong> obtiendra un accès complet à l&apos;administration : utilisateurs, sécurité, paramètres et données sensibles.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setPromoteStep(0)}
+                className="flex-1 px-5 py-2.5 rounded-xl font-display font-semibold text-sm border border-border-custom hover:bg-surface transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => { setPromoteStep(2); setPromoteText("") }}
+                className="flex-1 px-5 py-2.5 rounded-xl font-display font-semibold text-sm bg-terracotta text-white hover:bg-[#a33a0c] transition-colors"
+              >
+                Continuer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Promotion ADMIN — étape 2 : confirmation finale par saisie */}
+      {promoteStep === 2 && edit && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fi fi-rr-shield-exclamation text-red-500 text-xl" />
+            </div>
+            <h2 className="font-display font-bold text-dark text-lg mb-2 text-center">Confirmation finale</h2>
+            <p className="font-sans text-muted text-sm mb-4 text-center">
+              Pour confirmer, tapez <strong className="text-dark">ADMIN</strong> ci-dessous.
+            </p>
+            <input
+              type="text"
+              value={promoteText}
+              onChange={e => setPromoteText(e.target.value)}
+              placeholder="ADMIN"
+              autoFocus
+              className="w-full border border-border-custom rounded-xl px-4 py-2.5 font-sans text-sm text-center tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta mb-5"
+            />
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => { setPromoteStep(0); setPromoteText("") }}
+                disabled={saving}
+                className="flex-1 px-5 py-2.5 rounded-xl font-display font-semibold text-sm border border-border-custom hover:bg-surface transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={doSave}
+                disabled={saving || promoteText.trim().toUpperCase() !== "ADMIN"}
+                className="flex-1 px-5 py-2.5 rounded-xl font-display font-semibold text-sm bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-40"
+              >
+                {saving ? "Confirmation…" : "Confirmer"}
               </button>
             </div>
           </div>

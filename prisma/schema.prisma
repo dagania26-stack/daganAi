@@ -152,15 +152,25 @@ model SecurityLog {
   @@index([createdAt])
 }
 
+model SiteSettings {
+  id                 String   @id @default(cuid())
+  maintenanceMode    Boolean  @default(false)
+  maintenanceMessage String?  @db.Text
+  updatedById        String?
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+}
+
 model Announcement {
-  id        String            @id @default(cuid())
-  title     String
-  message   String            @db.Text
-  level     AnnouncementLevel @default(INFO)
-  active    Boolean           @default(true)
-  authorId  String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  title          String
+  message        String            @db.Text
+  level          AnnouncementLevel @default(INFO)
+  active         Boolean           @default(false)
+  targetSegment  String            @default("ALL")
+  authorId       String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 
+const LEVELS   = ["INFO", "SUCCESS", "WARNING"] as const
+const SEGMENTS = ["ALL", "ACTIVE", "INACTIVE", "DORMANT"] as const
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
@@ -16,7 +19,21 @@ export async function PATCH(
 
   const body = await req.json()
   const data: Record<string, unknown> = {}
+
   if (typeof body.active === "boolean") data.active = body.active
+  if (SEGMENTS.includes(body.targetSegment)) data.targetSegment = body.targetSegment
+  if (LEVELS.includes(body.level)) data.level = body.level
+
+  if (typeof body.title === "string") {
+    const title = body.title.trim()
+    if (!title) return NextResponse.json({ error: "Titre requis" }, { status: 400 })
+    data.title = title
+  }
+  if (typeof body.message === "string") {
+    const message = body.message.trim()
+    if (!message) return NextResponse.json({ error: "Message requis" }, { status: 400 })
+    data.message = message
+  }
 
   const announcement = await prisma.announcement.update({
     where:   { id: params.id },

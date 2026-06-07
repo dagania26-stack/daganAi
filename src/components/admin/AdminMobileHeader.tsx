@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/carte",        icon: "fi-rr-map-marker",      label: "Carte"               },
   { href: "/admin/annonces",     icon: "fi-rr-megaphone",       label: "Annonces"            },
   { href: "/admin/sante",        icon: "fi-rr-heart-rate",      label: "Santé"               },
+  { href: "/admin/maintenance",  icon: "fi-rr-settings",        label: "Maintenance"         },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -22,6 +23,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/carte":        "Cartographie",
   "/admin/annonces":     "Annonces",
   "/admin/sante":        "Santé système",
+  "/admin/maintenance":  "Maintenance",
 }
 
 interface Props {
