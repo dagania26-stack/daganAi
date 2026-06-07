@@ -210,6 +210,14 @@ export default function ChargesClient({ initialCharges }: Props) {
                     </div>
                   ))}
                 </div>
+                <div className="mb-4">
+                  <Pagination
+                    page={currentPage}
+                    total={group.length}
+                    perPage={PER_PAGE}
+                    onChange={p => setPages(prev => ({ ...prev, [type]: p }))}
+                  />
+                </div>
               </div>
             )
           })}

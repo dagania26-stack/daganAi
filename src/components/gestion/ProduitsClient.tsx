@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import Pagination from "./Pagination"
+
+const PER_PAGE = 10
 
 type Category = { id: string; nom: string; type: string }
 type Product  = {
@@ -33,6 +36,22 @@ export default function ProduitsClient({ initialProducts, initialCategories }: P
   const [deleting, setDeleting]     = useState<string | null>(null)
   const [formP, setFormP]           = useState(EMPTY_P)
   const [formC, setFormC]           = useState(EMPTY_CAT)
+  const [pageP, setPageP]           = useState(1)
+  const [pageC, setPageC]           = useState(1)
+
+  const pageCountP   = Math.max(1, Math.ceil(products.length / PER_PAGE))
+  const currentPageP = Math.min(pageP, pageCountP)
+  const paginatedP   = useMemo(
+    () => products.slice((currentPageP - 1) * PER_PAGE, currentPageP * PER_PAGE),
+    [products, currentPageP]
+  )
+
+  const pageCountC   = Math.max(1, Math.ceil(categories.length / PER_PAGE))
+  const currentPageC = Math.min(pageC, pageCountC)
+  const paginatedC   = useMemo(
+    () => categories.slice((currentPageC - 1) * PER_PAGE, currentPageC * PER_PAGE),
+    [categories, currentPageC]
+  )
 
   async function handleAddProduct(e: React.FormEvent) {
     e.preventDefault()
@@ -203,7 +222,7 @@ export default function ProduitsClient({ initialProducts, initialCategories }: P
           </div>
         ) : (
           <div className="space-y-2">
-            {products.map(p => {
+            {paginatedP.map(p => {
               const marge = p.prixVente > 0 ? ((p.prixVente - p.coutRevient) / p.prixVente * 100) : 0
               return (
                 <div key={p.id} className="bg-white rounded-xl border border-border-custom px-4 py-3 flex items-center gap-3">
@@ -231,6 +250,9 @@ export default function ProduitsClient({ initialProducts, initialCategories }: P
           </div>
         )
       )}
+      {tab === "produits" && products.length > 0 && (
+        <Pagination page={currentPageP} total={products.length} perPage={PER_PAGE} onChange={setPageP} />
+      )}
 
       {/* Liste catégories */}
       {tab === "categories" && (
@@ -241,7 +263,7 @@ export default function ProduitsClient({ initialProducts, initialCategories }: P
           </div>
         ) : (
           <div className="space-y-2">
-            {categories.map(cat => (
+            {paginatedC.map(cat => (
               <div key={cat.id} className="bg-white rounded-xl border border-border-custom px-4 py-3 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center shrink-0">
                   <i className="fi fi-rr-tag text-muted text-sm" />
@@ -258,6 +280,9 @@ export default function ProduitsClient({ initialProducts, initialCategories }: P
             ))}
           </div>
         )
+      )}
+      {tab === "categories" && categories.length > 0 && (
+        <Pagination page={currentPageC} total={categories.length} perPage={PER_PAGE} onChange={setPageC} />
       )}
     </div>
   )
