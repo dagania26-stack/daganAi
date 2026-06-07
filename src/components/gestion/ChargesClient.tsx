@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import Pagination from "./Pagination"
+
+const PER_PAGE = 10
 
 type Charge = {
   id:        string
@@ -33,6 +36,7 @@ export default function ChargesClient({ initialCharges }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting]   = useState<string | null>(null)
   const [form, setForm]           = useState(EMPTY)
+  const [pages, setPages]         = useState<Record<string, number>>({ FIXE: 1, VARIABLE: 1 })
 
   const totalFixe     = useMemo(() => charges.filter(c => c.actif && c.type === "FIXE").reduce((s, c) => s + toMonthly(c.montant, c.frequence), 0), [charges])
   const totalVariable = useMemo(() => charges.filter(c => c.actif && c.type === "VARIABLE").reduce((s, c) => s + toMonthly(c.montant, c.frequence), 0), [charges])
@@ -174,13 +178,16 @@ export default function ChargesClient({ initialCharges }: Props) {
           {["FIXE","VARIABLE"].map(type => {
             const group = charges.filter(c => c.type === type)
             if (!group.length) return null
+            const pageCount   = Math.max(1, Math.ceil(group.length / PER_PAGE))
+            const currentPage = Math.min(pages[type] ?? 1, pageCount)
+            const paginated   = group.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
             return (
               <div key={type}>
                 <p className="font-display font-semibold text-xs text-muted uppercase tracking-wider mb-2 px-1">
                   {type === "FIXE" ? "Charges fixes" : "Charges variables"}
                 </p>
-                <div className="space-y-2 mb-4">
-                  {group.map(charge => (
+                <div className="space-y-2 mb-2">
+                  {paginated.map(charge => (
                     <div key={charge.id} className={`bg-white rounded-xl border border-border-custom px-4 py-3 flex items-center gap-3 ${!charge.actif ? "opacity-50" : ""}`}>
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${charge.type === "FIXE" ? "bg-amber-100" : "bg-orange-100"}`}>
                         <i className={`fi fi-rr-receipt text-sm ${charge.type === "FIXE" ? "text-amber-600" : "text-orange-600"}`} />

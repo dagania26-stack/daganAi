@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import ConfirmDialog from "./ConfirmDialog"
 
 type Debt = {
   id:             string
@@ -33,6 +34,7 @@ export default function DettesClient({ initialDebts }: Props) {
   const [payAmount, setPayAmount]   = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting]     = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Debt | null>(null)
   const [form, setForm]             = useState(EMPTY)
 
   const totalEncours = useMemo(() => debts.filter(d => d.statut !== "REMBOURSE").reduce((s, d) => s + d.montantRestant, 0), [debts])
@@ -87,11 +89,14 @@ export default function DettesClient({ initialDebts }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Supprimer cette dette ?")) return
     setDeleting(id)
-    await fetch(`/api/gestion/dettes/${id}`, { method: "DELETE" })
-    setDebts(p => p.filter(d => d.id !== id))
-    setDeleting(null)
+    try {
+      await fetch(`/api/gestion/dettes/${id}`, { method: "DELETE" })
+      setDebts(p => p.filter(d => d.id !== id))
+    } finally {
+      setDeleting(null)
+      setConfirmDelete(null)
+    }
   }
 
   return (
@@ -204,7 +209,7 @@ export default function DettesClient({ initialDebts }: Props) {
                     </div>
                     <p className="font-sans text-xs text-muted">{debt.creancier}{debt.dateEcheance ? ` · échéance ${fmtDate(debt.dateEcheance)}` : ""}</p>
                   </div>
-                  <button onClick={() => handleDelete(debt.id)} disabled={deleting === debt.id}
+                  <button onClick={() => setConfirmDelete(debt)} disabled={deleting === debt.id}
                     className="p-1.5 text-muted hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0 disabled:opacity-40">
                     <i className="fi fi-rr-trash text-sm" />
                   </button>
@@ -251,6 +256,18 @@ export default function DettesClient({ initialDebts }: Props) {
           })}
         </div>
       )}
+
+      {/* Confirmation de suppression */}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Supprimer cette dette ?"
+        message={confirmDelete
+          ? `« ${confirmDelete.description} » (${confirmDelete.creancier}) — ${STATUT_CONFIG[confirmDelete.statut].label.toLowerCase()}. Cette action est définitive et supprimera tout son historique.`
+          : ""}
+        loading={!!confirmDelete && deleting === confirmDelete.id}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   )
 }

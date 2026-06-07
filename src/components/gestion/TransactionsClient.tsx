@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import Pagination from "./Pagination"
+
+const PER_PAGE = 10
 
 type Category    = { id: string; nom: string }
 type Transaction = {
@@ -30,6 +33,7 @@ export default function TransactionsClient({ initialTransactions, initialCategor
   const [categories]                     = useState<Category[]>(initialCategories)
   const [showForm, setShowForm]          = useState(false)
   const [filter, setFilter]              = useState<"ALL"|"ENTREE"|"SORTIE">("ALL")
+  const [page, setPage]                  = useState(1)
   const [submitting, setSubmitting]      = useState(false)
   const [deleting, setDeleting]          = useState<string | null>(null)
   const [form, setForm]                  = useState(EMPTY_FORM)
@@ -37,6 +41,12 @@ export default function TransactionsClient({ initialTransactions, initialCategor
   const filtered = useMemo(
     () => filter === "ALL" ? transactions : transactions.filter(t => t.type === filter),
     [transactions, filter]
+  )
+  const pageCount   = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const currentPage = Math.min(page, pageCount)
+  const paginated   = useMemo(
+    () => filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE),
+    [filtered, currentPage]
   )
   const totalEntrees = useMemo(() => transactions.filter(t => t.type === "ENTREE").reduce((s, t) => s + t.montant, 0), [transactions])
   const totalSorties = useMemo(() => transactions.filter(t => t.type === "SORTIE").reduce((s, t) => s + t.montant, 0), [transactions])
@@ -172,7 +182,7 @@ export default function TransactionsClient({ initialTransactions, initialCategor
       {/* Filtres */}
       <div className="flex gap-2 mb-4">
         {(["ALL","ENTREE","SORTIE"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)}
+          <button key={f} onClick={() => { setFilter(f); setPage(1) }}
             className={`px-3 py-1.5 rounded-lg text-xs font-display font-semibold transition-colors ${
               filter === f ? "bg-terracotta text-white" : "bg-white border border-border-custom text-muted hover:bg-surface"
             }`}>
@@ -193,7 +203,7 @@ export default function TransactionsClient({ initialTransactions, initialCategor
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(tx => (
+          {paginated.map(tx => (
             <div key={tx.id} className="bg-white rounded-xl border border-border-custom px-4 py-3 flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "ENTREE" ? "bg-green-100" : "bg-red-100"}`}>
                 <i className={`fi ${tx.type === "ENTREE" ? "fi-rr-arrow-up text-green-600" : "fi-rr-arrow-down text-red-600"} text-sm`} />
@@ -217,6 +227,8 @@ export default function TransactionsClient({ initialTransactions, initialCategor
           ))}
         </div>
       )}
+
+      <Pagination page={currentPage} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
     </div>
   )
 }
