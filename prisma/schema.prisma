@@ -30,6 +30,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?
   role          Role      @default(USER)
   pays          String?
   ville         String?
@@ -47,6 +48,27 @@ model User {
   @@index([email])
   @@index([role])
   @@index([createdAt])
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   // "REGISTER" | "RESET_PASSWORD"
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, type])
+}
+
+model PendingUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Account {

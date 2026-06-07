@@ -53,18 +53,6 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
-            href="/chat"
-            className={cn(
-              "inline-flex items-center gap-1.5 min-h-[38px]",
-              "bg-terracotta text-white font-display font-semibold text-sm",
-              "px-4 py-2 rounded-lg",
-              "hover:bg-[#a33a0c] active:scale-95 transition-all duration-150",
-            )}
-          >
-            <i className="fi fi-rr-comment-alt text-sm" aria-hidden="true" />
-            Commencer
-          </Link>
-          <Link
             href={session ? "/gestion" : "/connexion"}
             className={cn(
               "inline-flex items-center gap-1.5 min-h-[38px]",
@@ -115,14 +103,6 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/chat"
-            onClick={() => setOpen(false)}
-            className="mt-2 inline-flex items-center justify-center gap-2 bg-terracotta text-white font-display font-semibold text-sm px-4 py-3 rounded-lg hover:bg-[#a33a0c] transition-colors min-h-[44px]"
-          >
-            <i className="fi fi-rr-comment-alt text-sm" aria-hidden="true" />
-            Commencer maintenant
-          </Link>
           <Link
             href={session ? "/gestion" : "/connexion"}
             onClick={() => setOpen(false)}
