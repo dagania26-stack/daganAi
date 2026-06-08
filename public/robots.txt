@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://dagan-ia.tg/sitemap.xml
+Sitemap: https://dagania.tech/sitemap.xml

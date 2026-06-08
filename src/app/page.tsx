@@ -7,7 +7,19 @@ import DomainBadge from "@/components/layout/DomainBadge";
 export const metadata: Metadata = {
   title: "Dagan IA — Grande Sœur Numérique pour les femmes entrepreneures",
   description:
-    "Assistant IA spécialisé en droit OHADA, fiscalité OTR et financement pour les femmes entrepreneures du Togo et du Bénin.",
+    "Assistant IA spécialisé en droit OHADA, fiscalité et financement pour les femmes entrepreneures d'Afrique de l'Ouest. Création d'entreprise, obligations fiscales, accès au financement — réponses claires et sourcées.",
+  keywords: [
+    "Dagan IA", "assistant IA OHADA", "droit des affaires Afrique de l'Ouest",
+    "création entreprise Togo Bénin", "SARL SA GIE RCCM", "fiscalité OTR Togo", "fiscalité Bénin",
+    "financement PME femmes Afrique", "microfinance Togo Bénin", "femmes entrepreneures Afrique francophone",
+    "chatbot juridique Afrique", "grande sœur numérique",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    title:       "Dagan IA — Grande Sœur Numérique pour les femmes entrepreneures",
+    description: "Assistant IA spécialisé en droit OHADA, fiscalité et financement pour les femmes entrepreneures d'Afrique de l'Ouest.",
+    url:         "/",
+  },
 };
 
 const FEATURES = [

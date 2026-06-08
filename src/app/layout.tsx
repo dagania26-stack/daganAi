@@ -25,8 +25,17 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://dagania.tech"),
   title:       "Dagan IA — Grande Sœur Numérique",
-  description: "Assistant IA spécialisé en droit OHADA, fiscalité OTR et financement pour les femmes entrepreneures du Togo et du Bénin.",
-  keywords:    ["OHADA", "OTR", "création entreprise Togo", "fiscalité Bénin", "financement PME", "femmes entrepreneures", "SARL Togo", "droit des affaires", "assistant IA Afrique"],
+  description: "Assistant IA spécialisé en droit OHADA, fiscalité et financement pour les femmes entrepreneures d'Afrique de l'Ouest francophone.",
+  keywords: [
+    "OHADA", "droit OHADA", "droit des affaires Afrique", "espace OHADA",
+    "création entreprise Afrique de l'Ouest", "création entreprise Togo", "création entreprise Bénin",
+    "SARL SA GIE OHADA", "RCCM immatriculation entreprise", "statut juridique entreprise Afrique",
+    "fiscalité Afrique de l'Ouest", "fiscalité OTR Togo", "fiscalité Bénin", "TVA TPU patente",
+    "financement PME Afrique", "microfinance Afrique de l'Ouest", "fonds FAIEJ", "subventions PME femmes",
+    "femmes entrepreneures Afrique", "femmes entrepreneures Togo Bénin", "entrepreneuriat féminin Afrique francophone",
+    "assistant IA juridique Afrique", "chatbot juridique OHADA", "intelligence artificielle Afrique francophone",
+    "Togo Bénin Côte d'Ivoire Sénégal", "zone OHADA pays membres", "conseil juridique entreprise Lomé Cotonou",
+  ],
   manifest:    "/manifest.json",
   icons: {
     icon:  [{ url: "/icons-logo.ico", type: "image/x-icon" }],
@@ -34,6 +43,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
   openGraph: {
     title:       "Dagan IA — Grande Sœur Numérique",
@@ -92,7 +104,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "Dagan IA",
               url: "https://dagania.tech",
-              description: "Assistant IA spécialisé en droit OHADA, fiscalité OTR et financement pour les femmes entrepreneures du Togo et du Bénin.",
+              description: "Assistant IA spécialisé en droit OHADA, fiscalité et financement pour les femmes entrepreneures d'Afrique de l'Ouest francophone.",
               applicationCategory: "BusinessApplication",
               operatingSystem: "All",
               inLanguage: "fr",
@@ -101,8 +113,19 @@ export default function RootLayout({
               audience: {
                 "@type": "Audience",
                 audienceType: "Femmes entrepreneures",
-                geographicArea: { "@type": "Place", name: "Togo, Bénin" },
+                geographicArea: {
+                  "@type": "Place",
+                  name: "Espace OHADA — Afrique de l'Ouest et Centrale francophone",
+                },
               },
+              areaServed: [
+                { "@type": "Country", name: "Togo" },
+                { "@type": "Country", name: "Bénin" },
+                { "@type": "Country", name: "Côte d'Ivoire" },
+                { "@type": "Country", name: "Sénégal" },
+                { "@type": "Country", name: "Burkina Faso" },
+                { "@type": "Country", name: "Mali" },
+              ],
               publisher: {
                 "@type": "Organization",
                 name: "Dagan IA",
