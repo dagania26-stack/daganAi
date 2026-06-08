@@ -29,20 +29,30 @@ RÈGLES ABSOLUES — respecte-les sans exception :
 • Ne donne pas de garanties juridiques ou fiscales définitives — oriente vers un professionnel pour les cas complexes."""
 
 
-def build_messages(question: str, chunks: list[dict]) -> list[dict]:
+_MAX_HISTORY_TURNS = 6  # nombre d'échanges précédents conservés (user+assistant)
+
+
+def build_messages(question: str, chunks: list[dict], history: list[dict] | None = None) -> list[dict]:
     """Construit la liste de messages pour l'API LLM.
 
     Les chunks sont formatés en contexte numéroté avec titre et domaine.
+    L'historique (échanges précédents de la conversation) est inséré avant
+    la nouvelle question pour que l'assistant garde le fil de la discussion.
     """
     context = _format_context(chunks)
     user_content = (
         f"Contexte documentaire :\n\n{context}\n\n"
         f"Question de l'entrepreneuse : {question}"
     )
-    return [
-        {"role": "system",  "content": SYSTEM_PROMPT},
-        {"role": "user",    "content": user_content},
-    ]
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    if history:
+        messages.extend(
+            {"role": h["role"], "content": h["content"]}
+            for h in history[-_MAX_HISTORY_TURNS * 2:]
+        )
+    messages.append({"role": "user", "content": user_content})
+    return messages
 
 
 def _format_context(chunks: list[dict]) -> str:

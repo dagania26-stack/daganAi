@@ -1,4 +1,4 @@
-import type { RAGServiceResponse, RAGSource } from "@/types";
+import type { RAGServiceResponse, RAGSource, HistoryTurn } from "@/types";
 
 // Configurable via RAG_TIMEOUT_MS — défaut 8s pour rester dans les limites Vercel
 const RAG_TIMEOUT_MS = parseInt(process.env.RAG_TIMEOUT_MS ?? "8000", 10);
@@ -32,6 +32,7 @@ export async function queryRAG(
   question: string,
   conversationId?: string,
   domaine?: string,
+  history: HistoryTurn[] = [],
 ): Promise<RAGServiceResponse> {
   const url = `${process.env.RAG_SERVICE_URL}/api/query`;
 
@@ -47,6 +48,7 @@ export async function queryRAG(
         conversation_id: conversationId ?? null,
         domaine:         domaine ?? null,
         top_k:           3,
+        history,
       }),
       signal: controller.signal,
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { useChat } from "@/hooks/useChat";
 import Header from "@/components/layout/Header";
 import ErrorBanner from "@/components/ui/ErrorBanner";
@@ -8,12 +9,25 @@ import Toast from "@/components/ui/Toast";
 import MessageList from "./MessageList";
 import InputBar from "./InputBar";
 import SuggestedQuestions from "./SuggestedQuestions";
+import HistoryDrawer from "./HistoryDrawer";
 
 export default function ChatWindow() {
+  const { status } = useSession();
+  const isLoggedIn = status === "authenticated";
+
   const {
-    messages, isLoading, error, toast,
+    messages, isLoading, conversationId, error, toast,
+    conversations, isHistoryLoading,
     sendMessage, stopMessage, clearMessages, clearToast,
+    fetchConversations, loadConversation,
   } = useChat();
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const handleOpenHistory = useCallback(() => {
+    setHistoryOpen(true);
+    if (isLoggedIn) fetchConversations();
+  }, [isLoggedIn, fetchConversations]);
 
   // Reset du dismiss à chaque nouvelle erreur
   const [errorDismissed, setErrorDismissed] = useState(false);
@@ -53,7 +67,7 @@ export default function ChatWindow() {
     <div className="h-[100dvh] flex flex-col overflow-hidden bg-warm-white">
 
       {/* Header */}
-      <Header />
+      <Header onOpenHistory={isLoggedIn ? handleOpenHistory : undefined} />
 
       {/* Bannière d'erreur animée */}
       {showError && (
@@ -84,6 +98,19 @@ export default function ChatWindow() {
       {/* Toast (question doublon, etc.) */}
       {toast && (
         <Toast message={toast} type="info" onDismiss={clearToast} />
+      )}
+
+      {/* Historique des conversations (users connectés) */}
+      {isLoggedIn && (
+        <HistoryDrawer
+          open={historyOpen}
+          conversations={conversations}
+          isLoading={isHistoryLoading}
+          activeId={conversationId}
+          onClose={() => setHistoryOpen(false)}
+          onSelect={loadConversation}
+          onNewConversation={clearMessages}
+        />
       )}
 
     </div>

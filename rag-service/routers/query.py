@@ -53,7 +53,8 @@ async def query(request: QueryRequest) -> QueryResponse:
             )
 
         # d. Construction des messages et appel LLM
-        messages  = build_messages(question=request.question, chunks=raw_chunks)
+        history   = [h.model_dump() for h in request.history]
+        messages  = build_messages(question=request.question, chunks=raw_chunks, history=history)
         reponse   = call_llm(messages)
 
         sources = [

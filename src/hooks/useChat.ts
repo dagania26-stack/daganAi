@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, ConversationSummary } from "@/types";
 import { generateId } from "@/lib/utils";
 
 const SESSION_KEY   = "dagan_conversation_id";
@@ -12,15 +12,19 @@ const STREAM_CHUNK  = 25;
 const STREAM_TICK   = 25;
 
 export interface UseChatReturn {
-  messages:       ChatMessage[];
-  isLoading:      boolean;
-  conversationId: string | null;
-  error:          string | null;
-  toast:          string | null;
-  sendMessage:    (question: string) => Promise<void>;
-  stopMessage:    () => void;
-  clearMessages:  () => void;
-  clearToast:     () => void;
+  messages:            ChatMessage[];
+  isLoading:           boolean;
+  conversationId:      string | null;
+  error:               string | null;
+  toast:               string | null;
+  conversations:       ConversationSummary[];
+  isHistoryLoading:    boolean;
+  sendMessage:         (question: string) => Promise<void>;
+  stopMessage:         () => void;
+  clearMessages:       () => void;
+  clearToast:          () => void;
+  fetchConversations:  () => Promise<void>;
+  loadConversation:    (id: string) => Promise<void>;
 }
 
 function classifyError(err: unknown, status?: number): string {
@@ -43,6 +47,8 @@ export function useChat(): UseChatReturn {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error,          setError]          = useState<string | null>(null);
   const [toast,          setToast]          = useState<string | null>(null);
+  const [conversations,    setConversations]    = useState<ConversationSummary[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const abortRef       = useRef<AbortController | null>(null);
   const userAbortedRef = useRef(false);
@@ -176,5 +182,47 @@ export function useChat(): UseChatReturn {
 
   const clearToast = useCallback(() => setToast(null), []);
 
-  return { messages, isLoading, conversationId, error, toast, sendMessage, stopMessage, clearMessages, clearToast };
+  const fetchConversations = useCallback(async () => {
+    setIsHistoryLoading(true);
+    try {
+      const res  = await fetch("/api/chat/conversations");
+      if (!res.ok) return;
+      const data = await res.json() as { conversations?: ConversationSummary[] };
+      setConversations(data.conversations ?? []);
+    } catch {
+      // Historique indisponible — pas bloquant pour le chat
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, []);
+
+  const loadConversation = useCallback(async (id: string) => {
+    setIsHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/chat/conversations/${id}`);
+      if (!res.ok) return;
+      const data = await res.json() as { id?: string; messages?: ChatMessage[] };
+      if (!data.id || !data.messages) return;
+
+      stopMessage();
+      setMessages(
+        data.messages.map((m) => ({ ...m, createdAt: new Date(m.createdAt) })),
+      );
+      setConversationId(data.id);
+      sessionStorage.setItem(SESSION_KEY, data.id);
+      setError(null);
+      setToast(null);
+    } catch {
+      setToast("Impossible de charger cette conversation.");
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, [stopMessage]);
+
+  return {
+    messages, isLoading, conversationId, error, toast,
+    conversations, isHistoryLoading,
+    sendMessage, stopMessage, clearMessages, clearToast,
+    fetchConversations, loadConversation,
+  };
 }

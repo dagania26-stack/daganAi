@@ -3,12 +3,21 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { queryRAG } from "@/lib/rag-client"
 import { generateResponse, buildContext } from "@/lib/llm"
-import type { ChatRequest, ChatResponse, RAGSource } from "@/types"
+import type { ChatRequest, ChatResponse, RAGSource, HistoryTurn } from "@/types"
 
 export const maxDuration = 60
 
 const MAX_QUESTION_LENGTH = 500
+const MAX_HISTORY_MESSAGES = 6
+const TITRE_MAX_LENGTH = 80
 const INJECTION_RE = /<\s*script|javascript\s*:|on\w+\s*=|<\s*iframe|<\s*object/i
+
+function buildTitre(question: string): string {
+  const trimmed = question.trim()
+  return trimmed.length > TITRE_MAX_LENGTH
+    ? trimmed.slice(0, TITRE_MAX_LENGTH).trimEnd() + "…"
+    : trimmed
+}
 
 function getIp(req: NextRequest): string {
   return (
@@ -59,9 +68,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     let mode        = "rag"
     let erreur: string | null = null
 
+    // ── Récupération de l'historique pour garder le contexte ─────────────────
+    let history: HistoryTurn[] = []
+    if (conversationId) {
+      try {
+        const previous = await prisma.message.findMany({
+          where:   { conversationId },
+          orderBy: { createdAt: "desc" },
+          take:    MAX_HISTORY_MESSAGES,
+          select:  { question: true, reponse: true },
+        })
+        history = previous
+          .reverse()
+          .flatMap((m) => [
+            { role: "user" as const, content: m.question },
+            { role: "assistant" as const, content: m.reponse },
+          ])
+      } catch (histErr) {
+        console.warn("[/api/chat] Récupération historique ignorée :", histErr instanceof Error ? histErr.message : histErr)
+      }
+    }
+
     // ── Pipeline RAG ─────────────────────────────────────────────────────────
     try {
-      const ragData = await queryRAG(question.trim(), conversationId)
+      const ragData = await queryRAG(question.trim(), conversationId, undefined, history)
       reponse   = ragData.reponse
       sources   = ragData.sources
       ragLatence = ragData.latence_ms
@@ -70,7 +100,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // ── Fallback Claude direct ────────────────────────────────────────────
       mode = "claude-direct"
       console.warn("[/api/chat] RAG indisponible — bascule Claude direct")
-      const { reponse: r } = await generateResponse(question.trim(), buildContext([]))
+      const { reponse: r } = await generateResponse(question.trim(), buildContext([]), undefined, history)
       reponse = r
     }
 
@@ -83,7 +113,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
       if (!conversationId) {
         const conv = await prisma.conversation.create({
-          data: { langue: "fr", userAgent: req.headers.get("user-agent") ?? undefined },
+          data: {
+            langue:    "fr",
+            userAgent: req.headers.get("user-agent") ?? undefined,
+            userId:    userId ?? undefined,
+            titre:     buildTitre(question),
+          },
         })
         convId = conv.id
       }

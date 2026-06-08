@@ -17,6 +17,20 @@ export interface ChatMessage {
   createdAt: Date;
 }
 
+// ─── Tour de conversation transmis au LLM pour garder le contexte ────────────
+export interface HistoryTurn {
+  role:    "user" | "assistant";
+  content: string;
+}
+
+// ─── Conversation listée dans l'historique utilisateur ───────────────────────
+export interface ConversationSummary {
+  id:           string;
+  titre:        string;
+  derniereMaj:  string;
+  apercu:       string;
+}
+
 // ─── Requête vers /api/chat ───────────────────────────────────────────────────
 export interface ChatRequest {
   question: string;

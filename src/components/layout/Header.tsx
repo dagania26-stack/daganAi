@@ -9,7 +9,11 @@ const KENTE_PATTERN = [
   "repeating-linear-gradient(-45deg, transparent, transparent 9px, rgba(212,160,23,0.09)  9px, rgba(212,160,23,0.09)  10px)",
 ].join(", ");
 
-export default function Header() {
+export interface HeaderProps {
+  onOpenHistory?: () => void;
+}
+
+export default function Header({ onOpenHistory }: HeaderProps = {}) {
   return (
     <header
       className="sticky top-0 z-50 w-full bg-terracotta shadow-sm"
@@ -40,8 +44,20 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Spacer pour équilibrer le bouton retour */}
-        <div className="w-9" aria-hidden="true" />
+        {/* Historique des conversations (users connectés) */}
+        {onOpenHistory ? (
+          <button
+            type="button"
+            onClick={onOpenHistory}
+            aria-label="Historique des conversations"
+            title="Historique"
+            className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150"
+          >
+            <i className="fi fi-rr-clock-rotate-left text-white text-base leading-none" aria-hidden="true" />
+          </button>
+        ) : (
+          <div className="w-9" aria-hidden="true" />
+        )}
 
       </div>
     </header>
