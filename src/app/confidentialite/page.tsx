@@ -65,7 +65,7 @@ const SECTIONS = [
       "Droit de rectification : correction des données inexactes",
       "Droit à l'effacement : suppression de vos données sur demande",
       "Droit d'opposition : vous opposer au traitement de vos données",
-      "Pour exercer ces droits, contactez-nous à contact@dagan-ia.tg",
+      "Pour exercer ces droits, contactez-nous à contact@dagania.tech",
     ],
   },
 ];
@@ -153,10 +153,10 @@ export default function ConfidentialitePage() {
             Pour toute question relative à cette politique ou pour exercer vos droits :
           </p>
           <a
-            href="mailto:contact@dagan-ia.tg"
+            href="mailto:contact@dagania.tech"
             className="font-display text-sm font-semibold text-terracotta hover:underline"
           >
-            contact@dagan-ia.tg
+            contact@dagania.tech
           </a>
         </div>
       </div>

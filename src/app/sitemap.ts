@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://dagan-ia.tg";
+const BASE_URL = "https://dagania.tech";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

@@ -1,16 +1,24 @@
-import nodemailer from "nodemailer"
+import { Resend } from "resend"
 import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 
-// ─── Transporteur Gmail ───────────────────────────────────────────────────────
+// ─── Resend (OTP / annonces / rapports / contact) ────────────────────────────
 
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.GMAIL_USER ?? "societedilari@gmail.com",
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
+const RESEND_FROM = process.env.RESEND_FROM ?? "Dagan IA <onboarding@resend.dev>"
+
+function getResend(): Resend {
+  return new Resend(process.env.RESEND_API_KEY)
+}
+
+async function sendViaResend(opts: { to: string; subject: string; html: string; replyTo?: string }) {
+  const { data, error } = await getResend().emails.send({
+    from:    RESEND_FROM,
+    to:      opts.to,
+    subject: opts.subject,
+    html:    opts.html,
+    replyTo: opts.replyTo,
   })
+  if (error) throw new Error(error.message)
+  return data
 }
 
 // ─── Email OTP ────────────────────────────────────────────────────────────────
@@ -77,14 +85,8 @@ export async function sendOtpEmail(to: string, code: string, type: "REGISTER" | 
 </body>
 </html>`
 
-  const transporter = getTransporter()
-  const info = await transporter.sendMail({
-    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
-    to,
-    subject,
-    html,
-  })
-  console.log("[sendOtpEmail] envoyé:", { type, messageId: info.messageId })
+  const data = await sendViaResend({ to, subject, html })
+  console.log("[sendOtpEmail] envoyé via Resend:", { type, to, id: data?.id })
 }
 
 // ─── Annonces diffusées ───────────────────────────────────────────────────────
@@ -165,14 +167,8 @@ export async function sendAnnouncementEmail(to: string, opts: {
 </body>
 </html>`
 
-  const transporter = getTransporter()
-  const info = await transporter.sendMail({
-    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
-    to,
-    subject: `${opts.title} — Dagan IA`,
-    html,
-  })
-  console.log("[sendAnnouncementEmail] envoyé:", { to, messageId: info.messageId })
+  const data = await sendViaResend({ to, subject: `${opts.title} — Dagan IA`, html })
+  console.log("[sendAnnouncementEmail] envoyé via Resend:", { to, id: data?.id })
 }
 
 // ─── Rapport financier ────────────────────────────────────────────────────────
@@ -228,11 +224,67 @@ export async function sendRapportEmail(opts: {
 </body>
 </html>`
 
-  const transporter = getTransporter()
-  await transporter.sendMail({
-    from:    `"Dagan IA" <${process.env.GMAIL_USER ?? "societedilari@gmail.com"}>`,
-    to,
-    subject: `Rapport financier — ${businessNom} (${periode})`,
+  const data = await sendViaResend({ to, subject: `Rapport financier — ${businessNom} (${periode})`, html })
+  console.log("[sendRapportEmail] envoyé via Resend:", { to, id: data?.id })
+}
+
+// ─── Message du formulaire de contact ────────────────────────────────────────
+
+const CONTACT_TO = process.env.CONTACT_TO_EMAIL ?? "societedilari@gmail.com"
+
+export async function sendContactEmail(opts: {
+  nom:     string
+  email:   string
+  sujet:   string
+  message: string
+}) {
+  const nom     = escapeHtml(opts.nom)
+  const sujet   = escapeHtml(opts.sujet)
+  const message = escapeHtml(opts.message).replace(/\n/g, "<br/>")
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#F5F0EB;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;padding:40px 0;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;border:1px solid #E8E0D8;">
+        <tr>
+          <td style="background:#C1440E;padding:28px 40px;text-align:center;">
+            <p style="margin:0;font-weight:700;color:#fff;font-size:20px;">Nouveau message de contact</p>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">${sujet}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 40px;">
+            <table width="100%" cellpadding="10" style="border-radius:12px;background:#F5F0EB;margin-bottom:20px;">
+              <tr>
+                <td style="color:#6B4F3A;font-size:12px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;">Nom</td>
+                <td style="text-align:right;font-weight:700;color:#1A1A1A;font-size:14px;">${nom}</td>
+              </tr>
+              <tr>
+                <td style="color:#6B4F3A;font-size:12px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;border-top:1px solid #E8E0D8;">Email</td>
+                <td style="text-align:right;font-weight:700;color:#C1440E;font-size:14px;border-top:1px solid #E8E0D8;">${escapeHtml(opts.email)}</td>
+              </tr>
+            </table>
+            <p style="margin:0 0 8px;color:#6B4F3A;font-size:12px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;">Message</p>
+            <div style="margin:0;color:#3A352F;font-size:15px;line-height:1.7;">
+              ${message}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  const data = await sendViaResend({
+    to:      CONTACT_TO,
+    subject: `[Contact] ${opts.sujet} — ${opts.nom}`,
     html,
+    replyTo: opts.email,
   })
+  console.log("[sendContactEmail] envoyé via Resend:", { to: CONTACT_TO, id: data?.id })
 }

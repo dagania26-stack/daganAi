@@ -51,50 +51,60 @@ export default function OtpVerification({ email }: Props) {
     setError("")
     setLoading(true)
 
-    const res  = await fetch("/api/auth/verify-otp", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email, code }),
-    })
-    const data = await res.json()
+    try {
+      const res  = await fetch("/api/auth/verify-otp", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email, code }),
+      })
+      const data = await res.json().catch(() => ({}))
 
-    if (!res.ok) {
-      setLoading(false)
-      setError(data.error ?? "Code invalide.")
-      setDigits(["", "", "", "", "", ""])
-      inputs.current[0]?.focus()
-      return
-    }
-
-    // Auto-login avec le mot de passe stocké temporairement
-    const pwd = sessionStorage.getItem("__dagan_reg_pwd") ?? ""
-    sessionStorage.removeItem("__dagan_reg_pwd")
-
-    if (pwd) {
-      const result = await signIn("credentials", { email, password: pwd, redirect: false })
-      if (result?.ok) {
-        router.push("/gestion")
+      if (!res.ok) {
+        setError(data.error ?? "Code invalide.")
+        setDigits(["", "", "", "", "", ""])
+        inputs.current[0]?.focus()
         return
       }
-    }
 
-    // Fallback : rediriger vers connexion
-    router.push("/connexion?success=compte-cree")
+      // Auto-login avec le mot de passe stocké temporairement
+      const pwd = sessionStorage.getItem("__dagan_reg_pwd") ?? ""
+      sessionStorage.removeItem("__dagan_reg_pwd")
+
+      if (pwd) {
+        const result = await signIn("credentials", { email, password: pwd, redirect: false })
+        if (result?.ok) {
+          router.push("/gestion")
+          return
+        }
+      }
+
+      // Fallback : rediriger vers connexion
+      router.push("/connexion?success=compte-cree")
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleResend() {
     setResending(true)
     setError("")
-    await fetch("/api/auth/register", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email }),
-    })
-    setResending(false)
-    setResent(true)
-    setDigits(["", "", "", "", "", ""])
-    inputs.current[0]?.focus()
-    setTimeout(() => setResent(false), 5000)
+    try {
+      await fetch("/api/auth/register", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email }),
+      })
+      setResent(true)
+      setDigits(["", "", "", "", "", ""])
+      inputs.current[0]?.focus()
+      setTimeout(() => setResent(false), 5000)
+    } catch {
+      setError("Impossible de contacter le serveur. Réessayez.")
+    } finally {
+      setResending(false)
+    }
   }
 
   return (

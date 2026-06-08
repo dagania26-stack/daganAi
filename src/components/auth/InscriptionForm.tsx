@@ -48,23 +48,28 @@ export default function InscriptionForm() {
 
     setLoading(true)
 
-    const res = await fetch("/api/auth/register", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ name: name.trim(), email: email.trim(), password }),
-    })
+    try {
+      const res = await fetch("/api/auth/register", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+      })
 
-    const data = await res.json()
-    setLoading(false)
+      const data = await res.json().catch(() => ({}))
 
-    if (!res.ok) {
-      setError(data.error ?? "Une erreur est survenue.")
-      return
+      if (!res.ok) {
+        setError(data.error ?? "Une erreur est survenue.")
+        return
+      }
+
+      // Stocker le mot de passe temporairement pour l'auto-login après OTP
+      sessionStorage.setItem("__dagan_reg_pwd", password)
+      router.push(`/inscription/verification?email=${encodeURIComponent(email.trim())}`)
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.")
+    } finally {
+      setLoading(false)
     }
-
-    // Stocker le mot de passe temporairement pour l'auto-login après OTP
-    sessionStorage.setItem("__dagan_reg_pwd", password)
-    router.push(`/inscription/verification?email=${encodeURIComponent(email.trim())}`)
   }
 
   return (

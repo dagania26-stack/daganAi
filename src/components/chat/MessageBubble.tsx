@@ -48,7 +48,7 @@ function downloadAsPdf(content: string, date: Date) {
     <span class="date">${dateStr}</span>
   </header>
   <div class="content">${escaped}</div>
-  <footer>dagan-ia.tg — Grande Sœur Numérique pour les femmes entrepreneures</footer>
+  <footer>dagania.tech — Grande Sœur Numérique pour les femmes entrepreneures</footer>
 </body>
 </html>`;
 

@@ -15,7 +15,7 @@ const ARTICLES = [
     titre: "Présentation du service",
     contenu: `Dagan IA est un service d'assistance par intelligence artificielle destiné aux femmes entrepreneures du Togo et du Bénin. Il fournit des informations générales sur le droit des affaires OHADA, la fiscalité (OTR) et l'accès au financement.
 
-Le service est accessible gratuitement via le site web dagan-ia.tg. Aucune inscription n'est requise pour utiliser le chat.`,
+Le service est accessible gratuitement via le site web dagania.tech. Aucune inscription n'est requise pour utiliser le chat.`,
   },
   {
     num: "2",
@@ -60,7 +60,7 @@ Le service est fourni « en l'état », sans garantie de disponibilité continue
   {
     num: "7",
     titre: "Données personnelles",
-    contenu: `L'utilisation de Dagan IA implique la collecte de certaines données conformément à notre Politique de confidentialité, disponible sur dagan-ia.tg/confidentialite.
+    contenu: `L'utilisation de Dagan IA implique la collecte de certaines données conformément à notre Politique de confidentialité, disponible sur dagania.tech/confidentialite.
 
 En utilisant le service, vous consentez au traitement de vos données tel que décrit dans cette politique.`,
   },
@@ -137,11 +137,11 @@ export default function ConditionsPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <a
-              href="mailto:contact@dagan-ia.tg"
+              href="mailto:contact@dagania.tech"
               className="inline-flex items-center gap-1.5 text-terracotta font-display font-semibold text-sm hover:underline"
             >
               <i className="fi fi-rr-envelope text-xs" aria-hidden="true" />
-              contact@dagan-ia.tg
+              contact@dagania.tech
             </a>
             <Link
               href="/contact"

@@ -23,7 +23,7 @@ const dmSans = DM_Sans({
 
 /* ─── Metadata ───────────────────────────────────────────────────────────────── */
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dagan-ia.tg"),
+  metadataBase: new URL("https://dagania.tech"),
   title:       "Dagan IA — Grande Sœur Numérique",
   description: "Assistant IA spécialisé en droit OHADA, fiscalité OTR et financement pour les femmes entrepreneures du Togo et du Bénin.",
   keywords:    ["OHADA", "OTR", "création entreprise Togo", "fiscalité Bénin", "financement PME", "femmes entrepreneures", "SARL Togo", "droit des affaires", "assistant IA Afrique"],
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     type:        "website",
     locale:      "fr_FR",
     siteName:    "Dagan IA",
-    url:         "https://dagan-ia.tg",
+    url:         "https://dagania.tech",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Dagan IA — Grande Sœur Numérique" }],
   },
   twitter: {
@@ -91,7 +91,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               name: "Dagan IA",
-              url: "https://dagan-ia.tg",
+              url: "https://dagania.tech",
               description: "Assistant IA spécialisé en droit OHADA, fiscalité OTR et financement pour les femmes entrepreneures du Togo et du Bénin.",
               applicationCategory: "BusinessApplication",
               operatingSystem: "All",
@@ -106,8 +106,8 @@ export default function RootLayout({
               publisher: {
                 "@type": "Organization",
                 name: "Dagan IA",
-                url: "https://dagan-ia.tg",
-                logo: "https://dagan-ia.tg/logo.png",
+                url: "https://dagania.tech",
+                logo: "https://dagania.tech/logo.png",
               },
             }),
           }}

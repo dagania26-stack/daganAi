@@ -27,6 +27,7 @@ export default function ContactPage() {
   const [sent,      setSent]      = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [fieldErr,  setFieldErr]  = useState<Partial<FormState>>({});
+  const [serverErr, setServerErr] = useState<string | null>(null);
 
   function validate(): boolean {
     const err: Partial<FormState> = {};
@@ -41,11 +42,22 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
+    setServerErr(null);
     setLoading(true);
-    // Simulation d'envoi (à connecter à une API email)
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSent(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(form),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? "Une erreur est survenue.");
+      setSent(true);
+    } catch (err) {
+      setServerErr(err instanceof Error ? err.message : "Une erreur est survenue.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const field = (key: keyof FormState) => ({
@@ -194,6 +206,13 @@ export default function ContactPage() {
                 </div>
               </div>
 
+              {serverErr && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-sans">
+                  <i className="fi fi-rr-exclamation text-sm" aria-hidden="true" />
+                  {serverErr}
+                </div>
+              )}
+
               {/* Submit */}
               <button
                 type="submit"
@@ -229,8 +248,8 @@ export default function ContactPage() {
             {
               icon: "fi-rr-envelope",
               titre: "Email",
-              contenu: "contact@dagan-ia.tg",
-              lien: "mailto:contact@dagan-ia.tg",
+              contenu: "contact@dagania.tech",
+              lien: "mailto:contact@dagania.tech",
             },
             {
               icon: "fi-rr-marker",
