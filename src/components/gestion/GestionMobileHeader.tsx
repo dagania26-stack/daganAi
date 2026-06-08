@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
 
 const NAV = [
   { href: "/gestion",              icon: "fi-rr-chart-histogram", label: "Bord",    exact: true },
@@ -25,11 +27,12 @@ const PAGE_TITLES: Record<string, string> = {
 }
 
 interface Props {
-  user: { name?: string | null; image?: string | null }
+  user: { name?: string | null; email?: string | null; image?: string | null }
 }
 
 export default function GestionMobileHeader({ user }: Props) {
   const pathname = usePathname()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   function active(href: string, exact = false) {
     return exact ? pathname === href : pathname.startsWith(href)
@@ -50,11 +53,79 @@ export default function GestionMobileHeader({ user }: Props) {
           <span className="font-display font-bold text-dark text-sm">{title}</span>
         </div>
 
-        <div className="w-8 h-8 rounded-full bg-terracotta/10 flex items-center justify-center overflow-hidden">
-          {user.image
-            ? <img src={user.image} alt="" className="w-full h-full object-cover" />
-            : <i className="fi fi-rr-user text-terracotta text-sm" />
-          }
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menu du compte"
+            aria-expanded={menuOpen}
+            className="w-8 h-8 rounded-full bg-terracotta/10 flex items-center justify-center overflow-hidden active:scale-95 transition-transform"
+          >
+            {user.image
+              ? <img src={user.image} alt="" className="w-full h-full object-cover" />
+              : <i className="fi fi-rr-user text-terracotta text-sm" />
+            }
+          </button>
+
+          {menuOpen && (
+            <>
+              {/* Fond pour fermer au clic extérieur */}
+              <button
+                type="button"
+                aria-label="Fermer le menu"
+                className="fixed inset-0 z-30 cursor-default"
+                onClick={() => setMenuOpen(false)}
+              />
+
+              <div className="absolute right-0 top-11 z-40 w-56 rounded-xl bg-white border border-border-custom shadow-lg overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border-custom">
+                  <div className="w-9 h-9 rounded-full bg-terracotta/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {user.image
+                      ? <img src={user.image} alt="" className="w-full h-full object-cover" />
+                      : <i className="fi fi-rr-user text-terracotta text-sm" />
+                    }
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-display font-semibold text-dark text-xs truncate">
+                      {user.name ?? "Mon compte"}
+                    </p>
+                    {user.email && (
+                      <p className="font-sans text-muted text-xs truncate">{user.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                <Link
+                  href="/gestion/parametres"
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm font-display font-medium transition-colors ${
+                    active("/gestion/parametres") ? "bg-terracotta/10 text-terracotta" : "text-muted hover:bg-surface hover:text-dark"
+                  }`}
+                >
+                  <i className="fi fi-rr-settings text-base" aria-hidden="true" />
+                  Paramètres
+                </Link>
+
+                <Link
+                  href="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-display font-medium text-muted hover:bg-surface hover:text-dark transition-colors"
+                >
+                  <i className="fi fi-rr-home text-base" aria-hidden="true" />
+                  Accueil
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-display font-medium text-muted hover:bg-red-50 hover:text-red-600 transition-colors"
+                >
+                  <i className="fi fi-rr-sign-out-alt text-base" aria-hidden="true" />
+                  Déconnexion
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
