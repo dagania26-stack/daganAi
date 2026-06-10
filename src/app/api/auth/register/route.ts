@@ -37,7 +37,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error("[/api/auth/register]", err)
-    return NextResponse.json({ error: "Une erreur est survenue. Réessayez." }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error("[/api/auth/register]", msg)
+    const isEmailErr = /domain|authorized|verified|send|resend/i.test(msg)
+    return NextResponse.json(
+      { error: isEmailErr ? "L'envoi de l'email a échoué. Vérifiez la configuration Resend." : "Une erreur est survenue. Réessayez." },
+      { status: 500 },
+    )
   }
 }

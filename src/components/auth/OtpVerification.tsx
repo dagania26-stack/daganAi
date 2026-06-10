@@ -91,11 +91,21 @@ export default function OtpVerification({ email }: Props) {
     setResending(true)
     setError("")
     try {
-      await fetch("/api/auth/register", {
+      const pwd = sessionStorage.getItem("__dagan_reg_pwd") ?? ""
+      if (!pwd) {
+        router.push("/inscription")
+        return
+      }
+      const res = await fetch("/api/auth/register", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email }),
+        body:    JSON.stringify({ email, password: pwd }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? "Impossible de renvoyer le code.")
+        return
+      }
       setResent(true)
       setDigits(["", "", "", "", "", ""])
       inputs.current[0]?.focus()

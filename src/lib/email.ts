@@ -15,9 +15,12 @@ async function sendViaResend(opts: { to: string; subject: string; html: string; 
     to:      opts.to,
     subject: opts.subject,
     html:    opts.html,
-    replyTo: opts.replyTo,
+    ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
   })
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("[sendViaResend] Resend error:", error)
+    throw new Error(error.message)
+  }
   return data
 }
 
