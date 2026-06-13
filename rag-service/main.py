@@ -35,6 +35,8 @@ _ALLOWED_ORIGINS = [o.strip() for o in (
     "http://localhost:3000,"
     "https://dagan-ia.tg,"
     "https://dagan-ia.vercel.app,"
+    "https://dagania.tech,"
+    "https://www.dagania.tech,"
     + (__import__("os").getenv("ALLOWED_ORIGINS", ""))
 ).split(",") if o.strip()]
 
@@ -77,5 +79,7 @@ async def health():
 
 
 from routers.query import router as query_router
+from routers.ingest import router as ingest_router
 
-app.include_router(query_router, prefix="/api", tags=["query"])
+app.include_router(query_router,  prefix="/api", tags=["query"])
+app.include_router(ingest_router, prefix="/api", tags=["ingest"])

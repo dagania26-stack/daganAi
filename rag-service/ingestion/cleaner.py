@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 from pypdf import PdfReader
 
@@ -12,6 +13,17 @@ def extract_text_from_pdf(file_path: str) -> str:
         if text:
             pages.append(text)
     return "\n".join(pages)
+
+
+def extract_text_from_file(file_path: str) -> str:
+    """Extrait le texte depuis un PDF, TXT ou fichier Markdown."""
+    ext = Path(file_path).suffix.lower()
+    if ext == ".pdf":
+        return extract_text_from_pdf(file_path)
+    if ext in (".txt", ".md"):
+        with open(file_path, encoding="utf-8") as f:
+            return f.read()
+    raise ValueError(f"Format non supporté : {ext!r} — acceptés : .pdf .txt .md")
 
 
 def clean_text(text: str) -> str:
@@ -41,6 +53,6 @@ def clean_text(text: str) -> str:
 
 
 def prepare_document(file_path: str) -> str:
-    """Pipeline complet : extraction PDF + nettoyage du texte."""
-    raw_text = extract_text_from_pdf(file_path)
+    """Pipeline complet : extraction (PDF/TXT/MD) + nettoyage du texte."""
+    raw_text = extract_text_from_file(file_path)
     return clean_text(raw_text)

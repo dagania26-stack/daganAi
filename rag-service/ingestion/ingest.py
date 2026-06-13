@@ -146,6 +146,11 @@ def main() -> None:
         print(f"[ERROR] Fichier introuvable : {args.file}")
         sys.exit(1)
 
+    ext = os.path.splitext(args.file)[1].lower()
+    if ext not in (".pdf", ".txt", ".md"):
+        print(f"[ERROR] Format non supporté : {ext!r} — acceptés : .pdf .txt .md")
+        sys.exit(1)
+
     if not os.environ.get("DATABASE_URL"):
         print("[ERROR] Variable DATABASE_URL manquante. Vérifiez votre fichier .env")
         sys.exit(1)
