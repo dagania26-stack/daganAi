@@ -6,7 +6,9 @@ import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 const RESEND_FROM = process.env.RESEND_FROM ?? "Dagan IA <onboarding@resend.dev>"
 
 function getResend(): Resend {
-  return new Resend(process.env.RESEND_API_KEY)
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error("RESEND_API_KEY non configuré — ajoutez-le dans les variables d'environnement Vercel")
+  return new Resend(key)
 }
 
 async function sendViaResend(opts: { to: string; subject: string; html: string; replyTo?: string }) {
@@ -18,8 +20,10 @@ async function sendViaResend(opts: { to: string; subject: string; html: string; 
     ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
   })
   if (error) {
-    console.error("[sendViaResend] Resend error:", error)
-    throw new Error(error.message)
+    const detail = typeof error === "object" ? JSON.stringify(error) : String(error)
+    console.error("[sendViaResend] Resend error:", detail, "| from:", RESEND_FROM, "| to:", opts.to)
+    const msg = (error as { message?: string }).message ?? detail
+    throw new Error(`Resend: ${msg}`)
   }
   return data
 }

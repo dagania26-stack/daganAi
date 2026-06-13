@@ -33,16 +33,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     })
 
     const code = await createOtp(email, "REGISTER")
-    await sendOtpEmail(email, code, "REGISTER")
+
+    try {
+      await sendOtpEmail(email, code, "REGISTER")
+    } catch (emailErr) {
+      const msg = emailErr instanceof Error ? emailErr.message : String(emailErr)
+      console.error("[/api/auth/register] Email send failed:", msg)
+      return NextResponse.json(
+        { error: "L'envoi de l'email a échoué. Vérifiez que votre adresse email est correcte et réessayez." },
+        { status: 500 },
+      )
+    }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error("[/api/auth/register]", msg)
-    const isEmailErr = /domain|authorized|verified|send|resend/i.test(msg)
-    return NextResponse.json(
-      { error: isEmailErr ? "L'envoi de l'email a échoué. Vérifiez la configuration Resend." : "Une erreur est survenue. Réessayez." },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Une erreur est survenue. Réessayez." }, { status: 500 })
   }
 }
