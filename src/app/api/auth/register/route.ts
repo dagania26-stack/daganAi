@@ -29,7 +29,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await prisma.pendingUser.upsert({
       where:  { email },
       create: { email, name: name?.trim() || null, password: hashed, expiresAt: new Date(Date.now() + TTL_MS) },
-      update: { name: name?.trim() || null, password: hashed, expiresAt: new Date(Date.now() + TTL_MS) },
+      update: { ...(name !== undefined ? { name: name?.trim() || null } : {}), password: hashed, expiresAt: new Date(Date.now() + TTL_MS) },
     })
 
     const code = await createOtp(email, "REGISTER")

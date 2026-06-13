@@ -37,13 +37,22 @@ export async function POST(req: Request) {
   }, 0)
   const encours = debts.filter(d => d.statut !== "REMBOURSE").reduce((s, d) => s + d.montantRestant, 0)
 
-  await sendRapportEmail({
-    to:          email,
-    businessNom: guard.business.nom,
-    periode,
-    analyseText,
-    kpis: { ca, depenses, benefice, chargesMois, encours },
-  })
+  try {
+    await sendRapportEmail({
+      to:          email,
+      businessNom: guard.business.nom,
+      periode,
+      analyseText,
+      kpis: { ca, depenses, benefice, chargesMois, encours },
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error("[/api/gestion/rapport/email]", msg)
+    return NextResponse.json(
+      { error: "L'envoi de l'email a échoué. Vérifiez la configuration Resend dans Vercel." },
+      { status: 500 },
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }

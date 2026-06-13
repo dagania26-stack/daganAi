@@ -60,17 +60,42 @@ export async function POST(req: NextRequest) {
   } else if (urlVal) {
     let urlRes: Response
     try {
-      urlRes = await fetch(urlVal, { headers: { "User-Agent": "DaganIA-Bot/1.0" } })
-    } catch {
-      return NextResponse.json({ error: "Impossible de récupérer l'URL" }, { status: 400 })
+      const ctrl  = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 15_000)
+      try {
+        urlRes = await fetch(urlVal, {
+          headers: { "User-Agent": "DaganIA-Bot/1.0" },
+          signal:  ctrl.signal,
+        })
+      } finally {
+        clearTimeout(timer)
+      }
+    } catch (e) {
+      const msg = e instanceof Error && e.name === "AbortError"
+        ? "L'URL a mis trop de temps à répondre (délai : 15 s)."
+        : "Impossible de récupérer l'URL."
+      return NextResponse.json({ error: msg }, { status: 400 })
     }
+
+    if (!urlRes.ok)
+      return NextResponse.json({ error: `L'URL retourne une erreur HTTP ${urlRes.status}.` }, { status: 400 })
+
+    const MAX_BYTES = 20_000_000
+    const cl = parseInt(urlRes.headers.get("content-length") ?? "0", 10)
+    if (cl > MAX_BYTES)
+      return NextResponse.json({ error: "La ressource dépasse 20 Mo." }, { status: 400 })
+
     const ct = urlRes.headers.get("content-type") ?? ""
     if (ct.includes("pdf") || urlVal.toLowerCase().endsWith(".pdf")) {
       fileBlob = await urlRes.blob()
+      if (fileBlob.size > MAX_BYTES)
+        return NextResponse.json({ error: "Le fichier PDF dépasse 20 Mo." }, { status: 400 })
       filename = urlVal.split("/").pop()?.split("?")[0] ?? "document.pdf"
       if (!filename.toLowerCase().endsWith(".pdf")) filename += ".pdf"
     } else {
       const html = await urlRes.text()
+      if (html.length > 2_000_000)
+        return NextResponse.json({ error: "La page est trop volumineuse (> 2 Mo)." }, { status: 400 })
       const text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
                        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
                        .replace(/<[^>]+>/g, " ")

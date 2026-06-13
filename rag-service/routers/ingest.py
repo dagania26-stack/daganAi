@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import shutil
 import tempfile
 from pathlib import Path
 
@@ -13,9 +12,10 @@ logger = logging.getLogger("dagan-rag.ingest")
 
 router = APIRouter()
 
-_INGEST_SECRET  = os.getenv("INGEST_SECRET", "")
+_INGEST_SECRET    = os.getenv("INGEST_SECRET", "")
 _ALLOWED_DOMAINES = {"OHADA", "OTR", "FINANCEMENT"}
 _ALLOWED_EXTS     = {".pdf", ".txt", ".md"}
+_MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 Mo
 
 
 @router.post("/ingest")
@@ -44,23 +44,31 @@ async def ingest_document(
             detail=f"Format non supporté : {suffix!r} — acceptés : .pdf .txt .md",
         )
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
+    # Lecture async (non-bloquante) du contenu uploadé
+    contents = await file.read()
+    if len(contents) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 20 Mo).")
 
-    logger.info("Ingestion démarrée — titre=%r domaine=%s fichier=%s", titre, domaine, file.filename)
-
+    # Écriture sur disque + ingestion dans un thread pour ne pas bloquer l'event loop
+    tmp_path: str | None = None
     try:
-        loop = asyncio.get_event_loop()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(contents)
+            tmp_path = tmp.name
+
+        logger.info("Ingestion démarrée — titre=%r domaine=%s fichier=%s", titre, domaine, file.filename)
+
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             None,
             lambda: _ingest(tmp_path, domaine, titre, source, version),
         )
     finally:
-        try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
     logger.info("Ingestion terminée — titre=%r", titre)
     return {"ok": True, "titre": titre, "domaine": domaine, "version": version}

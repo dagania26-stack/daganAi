@@ -45,6 +45,8 @@ def call_llm(messages: list[dict]) -> str:
     # ── Claude — modèle principal ──────────────────────────────────────────────
     try:
         return _call_claude(messages)
+    except RuntimeError:
+        raise  # erreur de config (clé manquante) — ne pas masquer
     except Exception as exc:
         logger.warning(
             "Claude indisponible (%s: %s) — bascule sur %s",

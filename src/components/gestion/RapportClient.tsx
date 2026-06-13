@@ -21,6 +21,7 @@ export default function RapportClient({ businessNom, userEmail, periodeJours, pe
   const [analyseStatus, setAnalyseStatus] = useState<"idle" | "loading" | "done">("idle")
   const [pdfStatus,   setPdfStatus]   = useState<ExportStatus>("idle")
   const [emailStatus, setEmailStatus] = useState<ExportStatus>("idle")
+  const [emailErr,    setEmailErr]    = useState("")
   const [copied, setCopied]           = useState(false)
 
   async function loadAnalyse() {
@@ -70,18 +71,26 @@ export default function RapportClient({ businessNom, userEmail, periodeJours, pe
 
   async function sendEmail() {
     setEmailStatus("loading")
+    setEmailErr("")
     try {
-      const res = await fetch("/api/gestion/rapport/email", {
+      const res  = await fetch("/api/gestion/rapport/email", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ analyseText, periodeJours }),
       })
-      if (!res.ok) throw new Error()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setEmailErr(data.error ?? "L'envoi a échoué.")
+        setEmailStatus("error")
+        setTimeout(() => { setEmailStatus("idle"); setEmailErr("") }, 5000)
+        return
+      }
       setEmailStatus("done")
       setTimeout(() => setEmailStatus("idle"), 4000)
     } catch {
+      setEmailErr("Erreur réseau. Vérifiez votre connexion.")
       setEmailStatus("error")
-      setTimeout(() => setEmailStatus("idle"), 3000)
+      setTimeout(() => { setEmailStatus("idle"); setEmailErr("") }, 5000)
     }
   }
 
@@ -211,7 +220,7 @@ export default function RapportClient({ businessNom, userEmail, periodeJours, pe
             </p>
             <p className="font-sans text-xs text-muted">Vers {userEmail}</p>
           </div>
-          {emailStatus === "error" && <span className="text-xs text-red-600 font-sans">Erreur</span>}
+          {emailStatus === "error" && <span className="text-xs text-red-600 font-sans shrink-0">{emailErr || "Erreur"}</span>}
         </button>
       </div>
 

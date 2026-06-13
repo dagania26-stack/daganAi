@@ -181,6 +181,7 @@ export default function BaseConnaissanceClient() {
   const [editDoc,     setEditDoc]     = useState<Document | null>(null)
   const [deleteId,    setDeleteId]    = useState<string | null>(null)
   const [deleting,    setDeleting]    = useState(false)
+  const [deleteErr,   setDeleteErr]   = useState("")
   const [searchQ,     setSearchQ]     = useState("")
   const [filterD,     setFilterD]     = useState<string>("ALL")
 
@@ -282,11 +283,20 @@ export default function BaseConnaissanceClient() {
   async function handleDelete() {
     if (!deleteId) return
     setDeleting(true)
+    setDeleteErr("")
     try {
-      await fetch(`/api/admin/documents/${deleteId}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/documents/${deleteId}`, { method: "DELETE" })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setDeleteErr(data.error ?? "Erreur lors de la suppression.")
+        return
+      }
       setDocs(d => d.filter(x => x.id !== deleteId))
+      setDeleteId(null)
+    } catch {
+      setDeleteErr("Erreur réseau. Vérifiez votre connexion.")
     } finally {
-      setDeleting(false); setDeleteId(null)
+      setDeleting(false)
     }
   }
 
@@ -619,7 +629,7 @@ export default function BaseConnaissanceClient() {
 
       {/* ── Confirm suppression ────────────────────────────────────────────── */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDeleteId(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => { setDeleteId(null); setDeleteErr("") }}>
           <div className="bg-white rounded-2xl border border-border-custom shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
@@ -630,8 +640,14 @@ export default function BaseConnaissanceClient() {
                 <p className="font-sans text-muted text-xs mt-0.5">Tous les chunks associés seront supprimés. Action irréversible.</p>
               </div>
             </div>
+            {deleteErr && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-3 py-2 mb-3">
+                <i className="fi fi-rr-exclamation text-xs shrink-0" />
+                {deleteErr}
+              </div>
+            )}
             <div className="flex items-center justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="font-display text-sm text-muted hover:text-dark px-4 py-2 transition-colors">
+              <button onClick={() => { setDeleteId(null); setDeleteErr("") }} className="font-display text-sm text-muted hover:text-dark px-4 py-2 transition-colors">
                 Annuler
               </button>
               <button

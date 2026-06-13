@@ -187,8 +187,18 @@ export async function sendRapportEmail(opts: {
   analyseText?: string
   kpis:        { ca: number; depenses: number; benefice: number; chargesMois?: number; encours?: number }
 }) {
-  const { to, businessNom, periode, kpis } = opts
+  const { to, businessNom, periode, analyseText, kpis } = opts
   const f = (n: number) => new Intl.NumberFormat("fr-FR").format(Math.round(n)) + " FCFA"
+
+  const analyseSection = analyseText ? `
+        <tr>
+          <td style="padding:0 40px 32px;">
+            <p style="margin:0 0 10px;color:#6B4F3A;font-size:12px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;">Analyse Dagan IA</p>
+            <div style="background:#F5F0EB;border-radius:12px;padding:16px;">
+              <p style="margin:0;color:#3A352F;font-size:13px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(analyseText)}</p>
+            </div>
+          </td>
+        </tr>` : ""
 
   const html = `
 <!DOCTYPE html>
@@ -201,12 +211,12 @@ export async function sendRapportEmail(opts: {
         <tr>
           <td style="background:#C1440E;padding:28px 40px;text-align:center;">
             <p style="margin:0;font-weight:700;color:#fff;font-size:20px;">Rapport Financier</p>
-            <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">${businessNom} — ${periode}</p>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">${escapeHtml(businessNom)} — ${escapeHtml(periode)}</p>
           </td>
         </tr>
         <tr>
-          <td style="padding:32px 40px;">
-            <table width="100%" cellpadding="12" style="border-radius:12px;background:#F5F0EB;margin-bottom:24px;">
+          <td style="padding:32px 40px 24px;">
+            <table width="100%" cellpadding="12" style="border-radius:12px;background:#F5F0EB;margin-bottom:8px;">
               <tr>
                 <td style="color:#6B4F3A;font-size:12px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;">Chiffre d'affaires</td>
                 <td style="text-align:right;font-weight:700;color:#1A1A1A;font-size:16px;">${f(kpis.ca)}</td>
@@ -220,9 +230,12 @@ export async function sendRapportEmail(opts: {
                 <td style="text-align:right;font-weight:700;color:${kpis.benefice >= 0 ? "#16A34A" : "#DC2626"};font-size:18px;border-top:1px solid #E8E0D8;">${f(kpis.benefice)}</td>
               </tr>
             </table>
-            <p style="margin:0;color:#9CA3AF;font-size:12px;text-align:center;">
-              Genere automatiquement par Dagan IA
-            </p>
+          </td>
+        </tr>
+        ${analyseSection}
+        <tr>
+          <td style="padding:16px 40px 28px;text-align:center;">
+            <p style="margin:0;color:#9CA3AF;font-size:12px;">Genere automatiquement par Dagan IA</p>
           </td>
         </tr>
       </table>
