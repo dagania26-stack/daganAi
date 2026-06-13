@@ -237,7 +237,7 @@ export async function sendRapportEmail(opts: {
 
 // ─── Message du formulaire de contact ────────────────────────────────────────
 
-const CONTACT_TO = process.env.CONTACT_TO_EMAIL ?? "societedilari@gmail.com"
+const CONTACT_TO = process.env.CONTACT_TO_EMAIL ?? "dagania26@gmail.com"
 
 export async function sendContactEmail(opts: {
   nom:     string

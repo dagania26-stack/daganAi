@@ -254,7 +254,7 @@ export default function ContactPage() {
             {
               icon: "fi-rr-marker",
               titre: "Localisation",
-              contenu: "Lomé, Togo\nCotonou, Bénin",
+              contenu: "RN1, Agoe zongo derriere togobrick\nLomé (TOGO)",
               lien: null,
             },
             {
