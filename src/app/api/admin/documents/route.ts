@@ -83,6 +83,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Fichier ou URL requis" }, { status: 400 })
   }
 
+  if (!RAG_SERVICE_URL || RAG_SERVICE_URL === "http://localhost:8000")
+    return NextResponse.json({ error: "RAG_SERVICE_URL non configuré dans les variables Vercel" }, { status: 500 })
+
   const ragForm = new FormData()
   ragForm.append("file", fileBlob, filename)
   ragForm.append("domaine", domaine)
@@ -90,17 +93,27 @@ export async function POST(req: NextRequest) {
   ragForm.append("source", source)
   ragForm.append("version", version)
 
-  const ragRes = await fetch(`${RAG_SERVICE_URL}/api/ingest`, {
-    method:  "POST",
-    headers: { "x-api-key": INGEST_SECRET },
-    body:    ragForm,
-  })
+  let ragRes: Response
+  try {
+    ragRes = await fetch(`${RAG_SERVICE_URL}/api/ingest`, {
+      method:  "POST",
+      headers: { "x-api-key": INGEST_SECRET },
+      body:    ragForm,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error("[/api/admin/documents] Impossible de joindre le RAG:", msg)
+    return NextResponse.json(
+      { error: `Service RAG injoignable. Vérifiez que RAG_SERVICE_URL est correct dans Vercel (valeur actuelle : ${RAG_SERVICE_URL})` },
+      { status: 502 },
+    )
+  }
 
   if (!ragRes.ok) {
     const detail = await ragRes.text().catch(() => "")
-    console.error("[/api/admin/documents] RAG ingest error:", detail)
+    console.error("[/api/admin/documents] RAG ingest error:", ragRes.status, detail)
     return NextResponse.json(
-      { error: `Erreur du service RAG : ${ragRes.status}` },
+      { error: `Le service RAG a retourné une erreur ${ragRes.status}. Vérifiez les logs Render.` },
       { status: 502 },
     )
   }

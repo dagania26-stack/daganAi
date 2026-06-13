@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState, useEffect } from "react"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -107,6 +108,30 @@ export default function DashboardAdmin() {
           value={stats.securityEvents24h.toLocaleString("fr-FR")}
           sub="Dernières 24h"
         />
+      </div>
+
+      {/* Accès rapides */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {[
+          { href: "/admin/base-connaissance", icon: "fi-rr-database",   label: "Base de connaissances", desc: "Gérer les documents RAG",  accent: true  },
+          { href: "/admin/utilisateurs",      icon: "fi-rr-users",      label: "Utilisateurs",          desc: "Comptes & rôles"                          },
+          { href: "/admin/annonces",          icon: "fi-rr-megaphone",  label: "Annonces",              desc: "Diffuser un message"                      },
+          { href: "/admin/maintenance",       icon: "fi-rr-settings",   label: "Maintenance",           desc: "Mode maintenance"                         },
+        ].map(({ href, icon, label, desc, accent }) => (
+          <Link
+            key={href}
+            href={href}
+            className={`flex items-start gap-3 p-4 bg-white rounded-2xl border transition-all hover:shadow-sm hover:-translate-y-0.5 ${accent ? "border-terracotta/30 hover:border-terracotta/60" : "border-border-custom hover:border-dark/20"}`}
+          >
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${accent ? "bg-terracotta/10" : "bg-surface"}`}>
+              <i className={`fi ${icon} text-base ${accent ? "text-terracotta" : "text-muted"}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-display font-semibold text-dark text-sm leading-tight">{label}</p>
+              <p className="font-sans text-muted text-xs mt-0.5 truncate">{desc}</p>
+            </div>
+          </Link>
+        ))}
       </div>
 
       {/* Graphique inscriptions + chats */}

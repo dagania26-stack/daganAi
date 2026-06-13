@@ -262,10 +262,11 @@ export default function BaseConnaissanceClient() {
 
       try {
         const res  = await fetch("/api/admin/documents", { method: "POST", body: formData })
-        const data = await res.json()
+        const data = await res.json().catch(() => ({ error: `Erreur serveur (HTTP ${res.status}) — consultez les logs Vercel` }))
         if (!res.ok) { setIngestErr(data.error ?? "Erreur inconnue."); setIngesting(false); return }
-      } catch {
-        setIngestErr("Erreur réseau — vérifiez votre connexion."); setIngesting(false); return
+      } catch (err) {
+        setIngestErr(err instanceof Error ? err.message : "Erreur réseau inattendue.")
+        setIngesting(false); return
       }
     }
 
