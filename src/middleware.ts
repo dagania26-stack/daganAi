@@ -5,21 +5,32 @@ import type { NextRequest } from "next/server"
 
 const { auth } = NextAuth(authConfig)
 
-// Rate limiters — best-effort (Map locale à l'isolate Edge)
+// ── Rate limiters ────────────────────────────────────────────────────────────
 const store = new Map<string, { count: number; resetAt: number }>()
 const LIMIT     = 15
 const WINDOW_MS = 60_000
 
-// Endpoints d'authentification sensibles (OTP, inscription, mot de passe)
 const authStore = new Map<string, { count: number; resetAt: number }>()
 const AUTH_LIMIT     = 8
 const AUTH_WINDOW_MS = 10 * 60_000
+
+const contactStore = new Map<string, { count: number; resetAt: number }>()
+const CONTACT_LIMIT     = 3
+const CONTACT_WINDOW_MS = 10 * 60_000
 
 const AUTH_LIMITED_PATHS = [
   "/api/auth/register",
   "/api/auth/forgot-password",
   "/api/auth/verify-otp",
   "/api/auth/reset-password",
+]
+
+// Signatures de scanners et outils d'attaque connus
+const SCANNER_SIGNATURES = [
+  "sqlmap", "nikto", "nmap", "masscan", "zgrab", "nessus",
+  "openvas", "burpsuite", "metasploit", "havij", "acunetix",
+  "w3af", "dirbuster", "gobuster", "nuclei", "hydra", "wfuzz",
+  "commix", "zaproxy", "whatweb", "scrapy",
 ]
 
 function isRateLimited(map: Map<string, { count: number; resetAt: number }>, key: string, limit: number, windowMs: number): boolean {
@@ -36,7 +47,13 @@ function isRateLimited(map: Map<string, { count: number; resetAt: number }>, key
   return false
 }
 
-// ── Mode maintenance — cache local avec TTL court (Prisma indisponible côté Edge) ─
+function isMaliciousBot(ua: string): boolean {
+  if (!ua) return true
+  const lower = ua.toLowerCase()
+  return SCANNER_SIGNATURES.some(sig => lower.includes(sig))
+}
+
+// ── Mode maintenance ─────────────────────────────────────────────────────────
 let maintenanceCache: { enabled: boolean; fetchedAt: number } | null = null
 const MAINTENANCE_TTL_MS = 20_000
 
@@ -79,6 +96,14 @@ function isMaintenanceBypass(pathname: string): boolean {
 export default auth(async (req) => {
   const { pathname } = req.nextUrl
 
+  // ── Blocage des scanners et outils d'attaque ──────────────────────────────
+  if (pathname.startsWith("/api/")) {
+    const ua = req.headers.get("user-agent") ?? ""
+    if (isMaliciousBot(ua)) {
+      return new NextResponse(null, { status: 403 })
+    }
+  }
+
   // ── Mode maintenance ──────────────────────────────────────────────────────
   if (!isMaintenanceBypass(pathname)) {
     const maintenanceOn = await isMaintenanceEnabled(req)
@@ -112,7 +137,6 @@ export default auth(async (req) => {
   // ── Rate limiting /api/chat ───────────────────────────────────────────────
   if (pathname === "/api/chat") {
     if (isRateLimited(store, ip, LIMIT, WINDOW_MS)) {
-      // Notifier le service de log en fire-and-forget
       const logUrl = new URL("/api/internal/log", req.nextUrl)
       fetch(logUrl.toString(), {
         method:  "POST",
@@ -134,7 +158,17 @@ export default auth(async (req) => {
     }
   }
 
-  // ── Rate limiting endpoints d'authentification (OTP, inscription, mdp) ────
+  // ── Rate limiting /api/contact (Edge) ────────────────────────────────────
+  if (pathname === "/api/contact") {
+    if (isRateLimited(contactStore, ip, CONTACT_LIMIT, CONTACT_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Trop de messages envoyés. Veuillez patienter quelques minutes." },
+        { status: 429, headers: { "Retry-After": "600" } },
+      )
+    }
+  }
+
+  // ── Rate limiting endpoints d'authentification ────────────────────────────
   if (AUTH_LIMITED_PATHS.includes(pathname)) {
     if (isRateLimited(authStore, `${ip}:${pathname}`, AUTH_LIMIT, AUTH_WINDOW_MS)) {
       return NextResponse.json(
@@ -148,8 +182,6 @@ export default auth(async (req) => {
 })
 
 export const config = {
-  // Toutes les routes sauf les assets statiques — nécessaire pour appliquer
-  // le mode maintenance à l'ensemble du site.
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|sw.js|robots.txt|sitemap.xml|logo.png|og-image.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],

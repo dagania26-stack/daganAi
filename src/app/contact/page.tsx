@@ -24,6 +24,7 @@ const INITIAL: FormState = { nom: "", email: "", sujet: "", message: "" };
 
 export default function ContactPage() {
   const [form,      setForm]      = useState<FormState>(INITIAL);
+  const [honeypot,  setHoneypot]  = useState("");
   const [sent,      setSent]      = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [fieldErr,  setFieldErr]  = useState<Partial<FormState>>({});
@@ -41,6 +42,7 @@ export default function ContactPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (honeypot) return; // Honeypot déclenché — bot détecté
     if (!validate()) return;
     setServerErr(null);
     setLoading(true);
@@ -48,7 +50,7 @@ export default function ContactPage() {
       const res = await fetch("/api/contact", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(form),
+        body:    JSON.stringify({ ...form, _hp: honeypot }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Une erreur est survenue.");
@@ -114,6 +116,18 @@ export default function ContactPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+
+              {/* Honeypot anti-bot — invisible pour les humains */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+              />
 
               {/* Nom */}
               <div className="flex flex-col gap-1.5">

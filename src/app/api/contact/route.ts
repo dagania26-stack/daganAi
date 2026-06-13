@@ -18,11 +18,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Trop de messages envoyés. Réessayez plus tard." }, { status: 429 })
   }
 
-  let body: { nom?: string; email?: string; sujet?: string; message?: string }
+  let body: { nom?: string; email?: string; sujet?: string; message?: string; _hp?: string }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 })
+  }
+
+  // Honeypot — les bots remplissent ce champ, les humains non
+  if ((body._hp ?? "").length > 0) {
+    return NextResponse.json({ ok: true })
   }
 
   const nom     = (body.nom ?? "").trim()

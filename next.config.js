@@ -4,11 +4,13 @@ const isDev = process.env.NODE_ENV === "development";
 
 // Headers de sécurité communs (dev + prod)
 const COMMON_HEADERS = [
-  { key: "X-Frame-Options",          value: "DENY" },
-  { key: "X-Content-Type-Options",   value: "nosniff" },
-  { key: "X-DNS-Prefetch-Control",   value: "on" },
-  { key: "Referrer-Policy",          value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy",       value: "camera=(), microphone=(), geolocation=()" },
+  { key: "X-Frame-Options",             value: "DENY" },
+  { key: "X-Content-Type-Options",      value: "nosniff" },
+  { key: "X-DNS-Prefetch-Control",      value: "on" },
+  { key: "Referrer-Policy",             value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy",          value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), display-capture=(), browsing-topics=()" },
+  { key: "Cross-Origin-Opener-Policy",  value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
 const PROD_ONLY_HEADERS = [
@@ -36,7 +38,7 @@ const PROD_ONLY_HEADERS = [
 const nextConfig = {
   poweredByHeader: false,
   experimental: {
-    serverComponentsExternalPackages: ["@react-pdf/renderer"],
+    serverComponentsExternalPackages: ["@react-pdf/renderer", "nodemailer"],
   },
 
   async headers() {

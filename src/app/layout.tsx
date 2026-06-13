@@ -54,13 +54,11 @@ export const metadata: Metadata = {
     locale:      "fr_FR",
     siteName:    "Dagan IA",
     url:         "https://dagania.tech",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Dagan IA — Grande Sœur Numérique" }],
   },
   twitter: {
     card:        "summary_large_image",
     title:       "Dagan IA — Grande Sœur Numérique",
     description: "Assistant IA pour les femmes entrepreneures du Togo et du Bénin — Droit, Fiscalité, Financement.",
-    images:      ["/og-image.png"],
   },
   robots: {
     index:   true,

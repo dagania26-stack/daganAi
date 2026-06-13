@@ -2,16 +2,18 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireBusiness } from "@/lib/gestion"
 import { sendRapportEmail } from "@/lib/email"
-import { auth } from "@/auth"
 import { parsePeriodDays, periodLabel } from "@/lib/periode"
 
 export async function POST(req: Request) {
   const guard = await requireBusiness()
   if (!guard.ok) return guard.response
 
-  const session = await auth()
-  const email   = session?.user?.email
-  if (!email) return NextResponse.json({ error: "Email utilisateur introuvable" }, { status: 400 })
+  // Récupère l'email depuis la DB — plus fiable que session?.user?.email avec JWT
+  const user = await prisma.user.findUnique({
+    where:  { id: guard.userId },
+    select: { email: true },
+  })
+  if (!user?.email) return NextResponse.json({ error: "Email utilisateur introuvable" }, { status: 400 })
 
   const body        = await req.json().catch(() => ({}))
   const analyseText = (body.analyseText as string) ?? ""
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
 
   try {
     await sendRapportEmail({
-      to:          email,
+      to:          user.email,
       businessNom: guard.business.nom,
       periode,
       analyseText,

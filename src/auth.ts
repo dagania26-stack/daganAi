@@ -22,6 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           select: { id: true, email: true, name: true, role: true, password: true },
         })
 
+        
         if (!user?.password) return null
 
         const valid = await verifyPassword(credentials.password as string, user.password)

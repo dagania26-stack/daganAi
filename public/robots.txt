@@ -1,5 +1,17 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /gestion/
+Disallow: /admin/
+Disallow: /connexion/
+Disallow: /inscription/
+Disallow: /mot-de-passe-oublie/
+
+# Bots publicitaires — pas de collecte pour le ciblage
+User-agent: AdsBot-Google
+Disallow: /
+
+User-agent: AdsBot-Google-Mobile
+Disallow: /
 
 Sitemap: https://dagania.tech/sitemap.xml
