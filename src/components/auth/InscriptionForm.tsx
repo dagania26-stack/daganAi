@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 
 export default function InscriptionForm() {
@@ -62,9 +63,17 @@ export default function InscriptionForm() {
         return
       }
 
-      // Stocker le mot de passe temporairement pour l'auto-login après OTP
-      sessionStorage.setItem("__dagan_reg_pwd", password)
-      router.push(`/inscription/verification?email=${encodeURIComponent(email.trim())}`)
+      const result = await signIn("credentials", {
+        email:    email.trim(),
+        password,
+        redirect: false,
+      })
+
+      if (result?.ok) {
+        router.push("/gestion")
+      } else {
+        router.push("/connexion")
+      }
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.")
     } finally {
@@ -206,9 +215,9 @@ export default function InscriptionForm() {
               {loading ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <i className="fi fi-rr-envelope text-base" aria-hidden="true" />
+                <i className="fi fi-rr-user-add text-base" aria-hidden="true" />
               )}
-              {loading ? "Envoi du code…" : "Recevoir le code de vérification"}
+              {loading ? "Création du compte…" : "Créer mon compte"}
             </button>
           </form>
 

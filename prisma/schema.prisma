@@ -70,15 +70,6 @@ model OtpCode {
   @@index([email, type])
 }
 
-model PendingUser {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
 model Account {
   id                String  @id @default(cuid())
   userId            String

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
-import { createOtp } from "@/lib/otp"
-import { sendOtpEmail } from "@/lib/email"
-
-const TTL_MS = 15 * 60 * 1000 // 15 minutes pour le PendingUser
+import { getRequestGeo } from "@/lib/geoip"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -17,33 +14,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Le mot de passe doit comporter au moins 8 caractères" }, { status: 400 })
     }
 
-    // Vérifier si l'email est déjà utilisé
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing) {
       return NextResponse.json({ error: "Cette adresse email est déjà utilisée" }, { status: 409 })
     }
 
     const hashed = await hashPassword(password)
+    const { ip, pays, ville } = getRequestGeo(req.headers)
 
-    // Upsert PendingUser (en cas de re-tentative)
-    await prisma.pendingUser.upsert({
-      where:  { email },
-      create: { email, name: name?.trim() || null, password: hashed, expiresAt: new Date(Date.now() + TTL_MS) },
-      update: { ...(name !== undefined ? { name: name?.trim() || null } : {}), password: hashed, expiresAt: new Date(Date.now() + TTL_MS) },
+    await prisma.user.create({
+      data: {
+        email,
+        name:          name?.trim() || null,
+        password:      hashed,
+        emailVerified: new Date(),
+        lastIp:        ip,
+        lastLogin:     new Date(),
+        pays,
+        ville,
+      },
     })
-
-    const code = await createOtp(email, "REGISTER")
-
-    try {
-      await sendOtpEmail(email, code, "REGISTER")
-    } catch (emailErr) {
-      const msg = emailErr instanceof Error ? emailErr.message : String(emailErr)
-      console.error("[/api/auth/register] Email send failed:", msg)
-      return NextResponse.json(
-        { error: "L'envoi de l'email a échoué. Vérifiez que votre adresse email est correcte et réessayez." },
-        { status: 500 },
-      )
-    }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
