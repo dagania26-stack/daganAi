@@ -1,31 +1,30 @@
-import { Resend } from "resend"
+import nodemailer from "nodemailer"
 import { sanitizeAnnouncementHtml } from "@/lib/sanitizeHtml"
 
-// ─── Resend (OTP / annonces / rapports / contact) ────────────────────────────
+// ─── Gmail SMTP (OTP / annonces / rapports / contact) ────────────────────────
 
-const RESEND_FROM = process.env.RESEND_FROM ?? "Dagan IA <onboarding@resend.dev>"
-
-function getResend(): Resend {
-  const key = process.env.RESEND_API_KEY
-  if (!key) throw new Error("RESEND_API_KEY non configuré — ajoutez-le dans les variables d'environnement Vercel")
-  return new Resend(key)
+function getTransporter() {
+  const user = process.env.GMAIL_USER
+  const pass = process.env.GMAIL_APP_PASSWORD
+  if (!user || !pass) throw new Error("GMAIL_USER ou GMAIL_APP_PASSWORD non configuré — ajoutez-les dans les variables d'environnement")
+  return nodemailer.createTransport({
+    host:   "smtp.gmail.com",
+    port:   587,
+    secure: false,
+    auth:   { user, pass },
+  })
 }
 
-async function sendViaResend(opts: { to: string; subject: string; html: string; replyTo?: string }) {
-  const { data, error } = await getResend().emails.send({
-    from:    RESEND_FROM,
+async function sendViaSMTP(opts: { to: string; subject: string; html: string; replyTo?: string }) {
+  const user = process.env.GMAIL_USER!
+  const info = await getTransporter().sendMail({
+    from:    `Dagan IA <${user}>`,
     to:      opts.to,
     subject: opts.subject,
     html:    opts.html,
     ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
   })
-  if (error) {
-    const detail = typeof error === "object" ? JSON.stringify(error) : String(error)
-    console.error("[sendViaResend] Resend error:", detail, "| from:", RESEND_FROM, "| to:", opts.to)
-    const msg = (error as { message?: string }).message ?? detail
-    throw new Error(`Resend: ${msg}`)
-  }
-  return data
+  return info
 }
 
 // ─── Email OTP ────────────────────────────────────────────────────────────────
@@ -92,8 +91,8 @@ export async function sendOtpEmail(to: string, code: string, type: "REGISTER" | 
 </body>
 </html>`
 
-  const data = await sendViaResend({ to, subject, html })
-  console.log("[sendOtpEmail] envoyé via Resend:", { type, to, id: data?.id })
+  const info = await sendViaSMTP({ to, subject, html })
+  console.log("[sendOtpEmail] envoyé via Gmail SMTP:", { type, to, messageId: info.messageId })
 }
 
 // ─── Annonces diffusées ───────────────────────────────────────────────────────
@@ -174,8 +173,8 @@ export async function sendAnnouncementEmail(to: string, opts: {
 </body>
 </html>`
 
-  const data = await sendViaResend({ to, subject: `${opts.title} — Dagan IA`, html })
-  console.log("[sendAnnouncementEmail] envoyé via Resend:", { to, id: data?.id })
+  const info = await sendViaSMTP({ to, subject: `${opts.title} — Dagan IA`, html })
+  console.log("[sendAnnouncementEmail] envoyé via Gmail SMTP:", { to, messageId: info.messageId })
 }
 
 // ─── Rapport financier ────────────────────────────────────────────────────────
@@ -244,8 +243,8 @@ export async function sendRapportEmail(opts: {
 </body>
 </html>`
 
-  const data = await sendViaResend({ to, subject: `Rapport financier — ${businessNom} (${periode})`, html })
-  console.log("[sendRapportEmail] envoyé via Resend:", { to, id: data?.id })
+  const info = await sendViaSMTP({ to, subject: `Rapport financier — ${businessNom} (${periode})`, html })
+  console.log("[sendRapportEmail] envoyé via Gmail SMTP:", { to, messageId: info.messageId })
 }
 
 // ─── Message du formulaire de contact ────────────────────────────────────────
@@ -300,11 +299,11 @@ export async function sendContactEmail(opts: {
 </body>
 </html>`
 
-  const data = await sendViaResend({
+  const info = await sendViaSMTP({
     to:      CONTACT_TO,
     subject: `[Contact] ${opts.sujet} — ${opts.nom}`,
     html,
     replyTo: opts.email,
   })
-  console.log("[sendContactEmail] envoyé via Resend:", { to: CONTACT_TO, id: data?.id })
+  console.log("[sendContactEmail] envoyé via Gmail SMTP:", { to: CONTACT_TO, messageId: info.messageId })
 }

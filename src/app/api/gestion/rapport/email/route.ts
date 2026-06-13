@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error("[/api/gestion/rapport/email]", msg)
     return NextResponse.json(
-      { error: "L'envoi de l'email a échoué. Vérifiez la configuration Resend dans Vercel." },
+      { error: "L'envoi de l'email a échoué. Vérifiez la configuration Gmail SMTP dans les variables d'environnement." },
       { status: 500 },
     )
   }
