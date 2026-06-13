@@ -170,6 +170,21 @@ model Announcement {
   @@index([createdAt])
 }
 
+// ─── Messages de contact ─────────────────────────────────────────────────────
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  nom       String
+  email     String
+  sujet     String
+  message   String   @db.Text
+  lu        Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([lu])
+}
+
 // ─── Documents ────────────────────────────────────────────────────────────────
 
 model Document {

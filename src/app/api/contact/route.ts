@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 import { sendContactEmail } from "@/lib/email"
 import { rateLimit } from "@/lib/rate-limit"
 
@@ -35,17 +36,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const sujet   = (body.sujet ?? "").trim()
   const message = (body.message ?? "").trim()
 
-  if (!nom)                                       return NextResponse.json({ error: "Le nom est requis." }, { status: 400 })
-  if (!email.includes("@"))                       return NextResponse.json({ error: "Email invalide." }, { status: 400 })
-  if (!sujet)                                     return NextResponse.json({ error: "Le sujet est requis." }, { status: 400 })
-  if (message.length < 20)                        return NextResponse.json({ error: "Message trop court (20 caractères min)." }, { status: 400 })
-  if (message.length > MAX_MESSAGE_LENGTH)        return NextResponse.json({ error: "Message trop long." }, { status: 400 })
+  if (!nom)                                return NextResponse.json({ error: "Le nom est requis." }, { status: 400 })
+  if (!email.includes("@"))               return NextResponse.json({ error: "Email invalide." }, { status: 400 })
+  if (!sujet)                             return NextResponse.json({ error: "Le sujet est requis." }, { status: 400 })
+  if (message.length < 20)               return NextResponse.json({ error: "Message trop court (20 caractères min)." }, { status: 400 })
+  if (message.length > MAX_MESSAGE_LENGTH) return NextResponse.json({ error: "Message trop long." }, { status: 400 })
 
   try {
-    await sendContactEmail({ nom, email, sujet, message })
-    return NextResponse.json({ ok: true })
+    await prisma.contactMessage.create({ data: { nom, email, sujet, message } })
   } catch (err) {
-    console.error("[/api/contact]", err)
+    console.error("[/api/contact] DB save failed:", err)
     return NextResponse.json({ error: "Une erreur est survenue. Réessayez." }, { status: 500 })
   }
+
+  // Notification email en arrière-plan — non bloquante
+  sendContactEmail({ nom, email, sujet, message }).catch(err => {
+    console.error("[/api/contact] Email notification failed (message saved in DB):", err)
+  })
+
+  return NextResponse.json({ ok: true })
 }
