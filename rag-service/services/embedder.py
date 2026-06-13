@@ -6,24 +6,31 @@ from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
 logger = logging.getLogger("dagan-rag.embedder")
 
-_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_client: OpenAI | None = None
 
 _EMBED_MODEL = "text-embedding-3-small"
 _MAX_CHARS   = 8_000   # ~2 000 tokens, sous la limite du modèle
 _MAX_RETRIES = 3
 
 
-def get_embedding(text: str) -> list[float]:
-    """Retourne un vecteur de 1536 dimensions pour le texte donné.
+def _get_client() -> OpenAI:
+    global _client
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY non configuré — ajoutez-le dans les variables d'environnement Render")
+        _client = OpenAI(api_key=api_key)
+    return _client
 
-    Retente jusqu'à 3 fois en cas d'erreur API, avec délai exponentiel.
-    """
+
+def get_embedding(text: str) -> list[float]:
+    """Retourne un vecteur de 1536 dimensions pour le texte donné."""
     truncated = text[:_MAX_CHARS]
     last_err: Exception | None = None
 
     for attempt in range(_MAX_RETRIES):
         try:
-            response = _client.embeddings.create(
+            response = _get_client().embeddings.create(
                 model=_EMBED_MODEL,
                 input=truncated,
             )

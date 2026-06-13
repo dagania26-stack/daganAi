@@ -12,8 +12,28 @@ _OPENAI_MODEL  = "gpt-4o-mini"
 _MAX_TOKENS    = 1024
 _TEMPERATURE   = 0.1
 
-_anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-_openai_client    = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_anthropic_client: anthropic.Anthropic | None = None
+_openai_client: OpenAI | None = None
+
+
+def _get_anthropic() -> anthropic.Anthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY non configuré")
+        _anthropic_client = anthropic.Anthropic(api_key=api_key)
+    return _anthropic_client
+
+
+def _get_openai() -> OpenAI:
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY non configuré")
+        _openai_client = OpenAI(api_key=api_key)
+    return _openai_client
 
 
 def call_llm(messages: list[dict]) -> str:
@@ -44,7 +64,7 @@ def _call_claude(messages: list[dict]) -> str:
     user_messages = [m for m in messages if m["role"] != "system"]
 
     start = time.monotonic()
-    response = _anthropic_client.messages.create(
+    response = _get_anthropic().messages.create(
         model=_CLAUDE_MODEL,
         max_tokens=_MAX_TOKENS,
         system=system_prompt,
@@ -59,7 +79,7 @@ def _call_claude(messages: list[dict]) -> str:
 
 def _call_openai(messages: list[dict]) -> str:
     start = time.monotonic()
-    response = _openai_client.chat.completions.create(
+    response = _get_openai().chat.completions.create(
         model=_OPENAI_MODEL,
         max_tokens=_MAX_TOKENS,
         temperature=_TEMPERATURE,
